@@ -62,7 +62,7 @@
                 <div class="flex items-center space-x-2">
                     <!-- MODE INDICATOR BADGE -->
                     <div id="current-mode-badge" class="bg-blue-950 text-blue-200 border border-blue-800 px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap">
-                        👁️ Mode Umum (Atasan)
+                        👁️ Mode Umum
                     </div>
 
                     <!-- LOGIN / MODE TOGGLE -->
@@ -112,7 +112,7 @@
             </div>
 
             <!-- EXECUTIVE KPI CARDS (DRILL-DOWN CLICKABLE) -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 
                 <!-- CARD 1: TOTAL SO/PRO -->
                 <div onclick="drillDownKPI('all')" class="bg-white rounded-xl shadow-xs border border-slate-200 p-4 cursor-pointer hover:border-indigo-400 hover:shadow-md transition group">
@@ -150,19 +150,7 @@
                     </div>
                 </div>
 
-                <!-- CARD 4: CROSS-SBU INTEREST -->
-                <div onclick="drillDownKPI('all')" class="bg-white rounded-xl shadow-xs border border-slate-200 p-4 cursor-pointer hover:border-purple-400 hover:shadow-md transition group">
-                    <div class="flex justify-between items-start">
-                        <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Ketertarikan SBU</span>
-                        <span class="text-xs bg-purple-50 text-purple-700 p-1.5 rounded-lg font-bold">🔍 Lihat</span>
-                    </div>
-                    <div class="mt-3 flex items-baseline justify-between">
-                        <span id="kpi-sbu-interest" class="text-3xl font-extrabold text-purple-600">0</span>
-                        <span class="text-[11px] text-purple-700 font-medium">SBU Total</span>
-                    </div>
-                </div>
-
-                <!-- CARD 5: 3X TEST PROMO READY -->
+                <!-- CARD 4: 3X TEST PROMO READY -->
                 <div onclick="drillDownKPI('promo-ready')" class="bg-white rounded-xl shadow-xs border border-slate-200 p-4 cursor-pointer hover:border-amber-400 hover:shadow-md transition group">
                     <div class="flex justify-between items-start">
                         <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">3x Test Promo</span>
@@ -320,7 +308,6 @@
                                         <button onclick="toggleExcelFilterMenu(event, 'salesUtamaStatus')" class="hover:bg-slate-700 p-0.5 rounded text-amber-400">🔻</button>
                                     </div>
                                 </th>
-                                <th class="px-3 py-3 border-b border-slate-800 whitespace-nowrap">Ketertarikan SBU Lain</th>
                                 <th class="px-3 py-3 border-b border-slate-800 whitespace-nowrap">
                                     <div class="flex items-center justify-between space-x-1">
                                         <span>Status Order</span>
@@ -443,20 +430,6 @@
                         <label class="block font-bold text-slate-700 mb-1">Upload File Summary (3x Test / PDF)</label>
                         <input type="file" id="form-summary-file" accept=".pdf, .xlsx, .xls" class="w-full text-slate-500 text-xs">
                         <span id="existing-file-badge" class="hidden text-[10px] text-indigo-600 font-semibold block mt-1"></span>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block font-bold text-slate-700 mb-1">Ketertarikan SBU Lain (Cross-SBU Interest)</label>
-                    <div class="grid grid-cols-4 gap-2 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-                        <label class="flex items-center space-x-1 text-[11px] font-medium"><input type="checkbox" name="sbu-other" value="SBU 1" class="rounded text-indigo-600"> <span>SBU 1</span></label>
-                        <label class="flex items-center space-x-1 text-[11px] font-medium"><input type="checkbox" name="sbu-other" value="SBU 2" class="rounded text-indigo-600"> <span>SBU 2</span></label>
-                        <label class="flex items-center space-x-1 text-[11px] font-medium"><input type="checkbox" name="sbu-other" value="SBU 3" class="rounded text-indigo-600"> <span>SBU 3</span></label>
-                        <label class="flex items-center space-x-1 text-[11px] font-medium"><input type="checkbox" name="sbu-other" value="SBU 4" class="rounded text-indigo-600"> <span>SBU 4</span></label>
-                        <label class="flex items-center space-x-1 text-[11px] font-medium"><input type="checkbox" name="sbu-other" value="SBU 5" class="rounded text-indigo-600"> <span>SBU 5</span></label>
-                        <label class="flex items-center space-x-1 text-[11px] font-medium"><input type="checkbox" name="sbu-other" value="SBU 6" class="rounded text-indigo-600"> <span>SBU 6</span></label>
-                        <label class="flex items-center space-x-1 text-[11px] font-medium"><input type="checkbox" name="sbu-other" value="SBU 7" class="rounded text-indigo-600"> <span>SBU 7</span></label>
-                        <label class="flex items-center space-x-1 text-[11px] font-medium"><input type="checkbox" name="sbu-other" value="SBU 8" class="rounded text-indigo-600"> <span>SBU 8</span></label>
                     </div>
                 </div>
 
@@ -674,83 +647,79 @@
 
         // GLOBAL IN-MEMORY ARRAYS (NO LOCALSTORAGE SAVING TO AVOID SINGLE-DEVICE ISOLATION)
         let trialItems = [...defaultTrialItems];
-        let improvements = [...defaultImprovements];
+        let improvements = JSON.parse(localStorage.getItem('woven_improvements')) || [...defaultImprovements];
 
-        // FETCH LIVE DATA FROM GOOGLE SHEETS CSV AUTOMATICALLY WITH ERROR SAFEGUARDS
-        async function fetchGoogleSheetsData() {
+        function saveImprovementsStorage() {
+            localStorage.setItem('woven_improvements', JSON.stringify(improvements));
+        }
+
+        // --- FETCH LIVE GOOGLE SHEETS DATA ---
+        function fetchGoogleSheetsData() {
             if (!GOOGLE_SHEETS_CSV_URL) return;
-            try {
-                const response = await fetch(GOOGLE_SHEETS_CSV_URL + '&t=' + Date.now(), { mode: 'cors' });
-                if (response.ok) {
-                    const csvText = await response.text();
-                    const parsedData = parseCSV(csvText);
+            fetch(GOOGLE_SHEETS_CSV_URL, { mode: 'cors' })
+                .then(response => response.text())
+                .then(csvText => {
+                    const rows = parseCSV(csvText);
+                    if (rows.length > 1) {
+                        const parsedItems = [];
+                        for (let i = 1; i < rows.length; i++) {
+                            const r = rows[i];
+                            if (r.length >= 11 && r[0]) {
+                                parsedItems.push({
+                                    id: `SHEET-${i}`,
+                                    so: r[0] || '',
+                                    pro: r[1] || '',
+                                    dateStart: r[2] || '',
+                                    dateEnd: r[3] || '',
+                                    chop: r[4] || '',
+                                    name: r[5] || '',
+                                    kategori: r[6] || '1x Test / Matrix',
+                                    sbuUtama: r[7] || 'SBU 1',
+                                    salesUtamaStatus: r[7]?.toUpperCase() === 'OK' || r[7]?.toUpperCase() === 'PENDING' ? r[7] : 'OK',
+                                    otherSbus: r[8] ? r[8].split(',').map(s => s.trim()).filter(Boolean) : [],
+                                    orderStatus: r[9] || 'Will Order',
+                                    rftStage: r[6] === '3x Test (Promo)' ? '3x Test Selesai (OK)' : 'N/A',
+                                    attachmentName: r[10] || '',
+                                    attachmentData: r[10] ? 'data:application/pdf;base64,JVBERi0xLjQK' : '',
+                                    remarks: r[11] || ''
+                                });
+                            }
+                        }
+                        if (parsedItems.length > 0) {
+                            trialItems = parsedItems;
+                            renderAll();
+                        }
+                    }
+                })
+                .catch(err => {
+                    console.log("Google Sheets live fetch skipped/offline, using default items:", err);
+                });
+        }
 
-                    if (parsedData && parsedData.length > 0) {
-                        trialItems = parsedData;
+        function parseCSV(text) {
+            let lines = text.split('\n');
+            let result = [];
+            for (let i = 0; i < lines.length; i++) {
+                let row = [];
+                let inCols = false;
+                let entry = '';
+                for (let c = 0; c < lines[i].length; c++) {
+                    let char = lines[i][c];
+                    if (char === '"') {
+                        inCols = !inCols;
+                    } else if (char === ',' && !inCols) {
+                        row.push(entry.trim().replace(/^"|"$/g, ''));
+                        entry = '';
+                    } else {
+                        entry += char;
                     }
                 }
-            } catch (err) {
-                // Silently fallback to default/local items if network/CORS restricts preview fetching
-                console.log("Using fallback data for preview environment.");
-            } finally {
-                renderAll();
+                row.push(entry.trim().replace(/^"|"$/g, ''));
+                if (row.some(Boolean)) {
+                    result.push(row);
+                }
             }
-        }
-
-        // PARSE CSV DATA FOR TRIALS
-        function parseCSV(text) {
-            const lines = text.trim().split('\n');
-            if (lines.length < 2) return null;
-            const items = [];
-
-            for (let i = 1; i < lines.length; i++) {
-                if (!lines[i].trim()) continue;
-                const row = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || lines[i].split(',');
-                const cleanRow = row.map(cell => cell.trim().replace(/^"|"$/g, '').replace(/""/g, '"'));
-
-                items.push({
-                    id: "GS-" + (i),
-                    so: cleanRow[0] || `SO-${1000 + i}`,
-                    pro: cleanRow[1] || `PRO-${2000 + i}`,
-                    dateStart: cleanRow[2] || "2026-10-01",
-                    dateEnd: cleanRow[3] || "2026-10-05",
-                    chop: cleanRow[4] || "TEX",
-                    name: cleanRow[5] || "Trial Fabric",
-                    kategori: cleanRow[6] || "1x Test / Matrix",
-                    sbuUtama: "SBU 1",
-                    salesUtamaStatus: cleanRow[7] || "OK",
-                    otherSbus: cleanRow[8] ? cleanRow[8].split(';') : [],
-                    orderStatus: cleanRow[9] || "Will Order",
-                    rftStage: cleanRow[10] ? "Approved" : "N/A",
-                    attachmentName: cleanRow[10] || "",
-                    attachmentData: cleanRow[10] ? "data:text/plain;base64,U3VtbWFyeSBEb2N1bWVudA==" : "",
-                    remarks: cleanRow[11] || ""
-                });
-            }
-            return items;
-        }
-
-        // PARSE CSV DATA FOR IMPROVEMENTS
-        function parseImprovementsCSV(text) {
-            const lines = text.trim().split('\n');
-            if (lines.length < 2) return null;
-            const items = [];
-
-            for (let i = 1; i < lines.length; i++) {
-                if (!lines[i].trim()) continue;
-                const row = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || lines[i].split(',');
-                const cleanRow = row.map(cell => cell.trim().replace(/^"|"$/g, '').replace(/""/g, '"'));
-
-                items.push({
-                    id: "IMP-GS-" + (i),
-                    title: cleanRow[0] || "Inisiatif Baru",
-                    category: cleanRow[1] || "SYSTEM AUTOMATION",
-                    creatorType: cleanRow[2] || "Individual (Nisa)",
-                    date: cleanRow[3] || new Date().toISOString().slice(0, 10),
-                    desc: cleanRow[4] || ""
-                });
-            }
-            return items;
+            return result;
         }
 
         let isAdminMode = false;
@@ -1033,6 +1002,19 @@
             renderTrialsTable();
         }
 
+        function updateActiveFiltersBanner() {
+            const bar = document.getElementById('active-column-filters-bar');
+            const text = document.getElementById('active-filters-list-text');
+            const activeKeys = Object.keys(columnFilters);
+
+            if (activeKeys.length > 0 && bar && text) {
+                text.textContent = activeKeys.map(k => `${k}: (${columnFilters[k].length} terpilih)`).join(', ');
+                bar.classList.remove('hidden');
+            } else if (bar) {
+                bar.classList.add('hidden');
+            }
+        }
+
         function applySummaryDateFilter() {
             const dateFrom = document.getElementById('summary-date-from')?.value;
             const dateTo = document.getElementById('summary-date-to')?.value;
@@ -1064,7 +1046,7 @@
             tbody.innerHTML = '';
 
             if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="12" class="px-4 py-8 text-center text-xs text-slate-400 font-medium">Tidak ada data trial yang cocok.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="11" class="px-4 py-8 text-center text-xs text-slate-400 font-medium">Tidak ada data trial yang cocok.</td></tr>`;
                 return;
             }
 
@@ -1104,13 +1086,134 @@
                     <td class="px-3 py-2.5 font-bold text-slate-800">${item.name}</td>
                     <td class="px-3 py-2.5 text-slate-600 font-medium">${item.kategori}</td>
                     <td class="px-3 py-2.5">${salesBadge}</td>
-                    <td class="px-3 py-2.5 text-slate-500">${(item.otherSbus || []).join(', ') || '-'}</td>
                     <td class="px-3 py-2.5">${orderBadge}</td>
                     <td class="px-3 py-2.5">${summaryBtn}</td>
                     <td class="px-3 py-2.5 text-right">${actionBtns}</td>
                 `;
                 tbody.appendChild(tr);
             });
+        }
+
+        function updateKPIs() {
+            const filtered = getFilteredTrialItems();
+            const total = filtered.length;
+            const salesOkCount = filtered.filter(i => i.salesUtamaStatus === 'OK').length;
+            const willOrderCount = filtered.filter(i => i.orderStatus === 'Will Order').length;
+            const promoReadyCount = filtered.filter(i => i.kategori === '3x Test (Promo)').length;
+
+            const salesRate = total > 0 ? Math.round((salesOkCount / total) * 100) : 0;
+            const orderRate = total > 0 ? Math.round((willOrderCount / total) * 100) : 0;
+
+            if (document.getElementById('kpi-total')) document.getElementById('kpi-total').textContent = total;
+            if (document.getElementById('kpi-sales-utama')) document.getElementById('kpi-sales-utama').textContent = `${salesRate}%`;
+            if (document.getElementById('kpi-order-rate')) document.getElementById('kpi-order-rate').textContent = `${orderRate}%`;
+            if (document.getElementById('kpi-promo-ready')) document.getElementById('kpi-promo-ready').textContent = promoReadyCount;
+        }
+
+        function saveItem(e) {
+            e.preventDefault();
+            const id = document.getElementById('form-id').value;
+            const so = document.getElementById('form-so').value;
+            const pro = document.getElementById('form-pro').value;
+            const dateStart = document.getElementById('form-date-start').value;
+            const dateEnd = document.getElementById('form-date-end').value;
+            const chop = document.getElementById('form-chop').value;
+            const name = document.getElementById('form-name').value;
+            const kategori = document.getElementById('form-kategori').value;
+            const remarks = document.getElementById('form-remarks').value;
+
+            const fileInput = document.getElementById('form-summary-file');
+            let attachmentName = "";
+            let attachmentData = "";
+
+            if (fileInput && fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                attachmentName = file.name;
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    attachmentData = evt.target.result;
+                    commitSaveItem(id, { so, pro, dateStart, dateEnd, chop, name, kategori, remarks, attachmentName, attachmentData });
+                };
+                reader.readAsDataURL(file);
+            } else {
+                commitSaveItem(id, { so, pro, dateStart, dateEnd, chop, name, kategori, remarks });
+            }
+        }
+
+        function commitSaveItem(id, data) {
+            if (id) {
+                const index = trialItems.findIndex(i => i.id === id);
+                if (index !== -1) {
+                    trialItems[index] = {
+                        ...trialItems[index],
+                        so: data.so,
+                        pro: data.pro,
+                        dateStart: data.dateStart,
+                        dateEnd: data.dateEnd,
+                        chop: data.chop,
+                        name: data.name,
+                        kategori: data.kategori,
+                        remarks: data.remarks,
+                        ...(data.attachmentName ? { attachmentName: data.attachmentName, attachmentData: data.attachmentData } : {})
+                    };
+                }
+            } else {
+                const newItem = {
+                    id: `PRJ-${Date.now()}`,
+                    so: data.so,
+                    pro: data.pro,
+                    dateStart: data.dateStart,
+                    dateEnd: data.dateEnd,
+                    chop: data.chop,
+                    name: data.name,
+                    kategori: data.kategori,
+                    sbuUtama: "SBU 1",
+                    salesUtamaStatus: "OK",
+                    orderStatus: "Will Order",
+                    rftStage: data.kategori === '3x Test (Promo)' ? '3x Test Selesai (OK)' : 'N/A',
+                    attachmentName: data.attachmentName || '',
+                    attachmentData: data.attachmentData || '',
+                    remarks: data.remarks
+                };
+                trialItems.unshift(newItem);
+
+                if (GOOGLE_APPS_SCRIPT_URL && GOOGLE_APPS_SCRIPT_URL !== "YOUR_APPS_SCRIPT_WEB_APP_URL_HERE") {
+                    showToast("Mengirim data baru ke Google Sheets...");
+                    fetch(GOOGLE_APPS_SCRIPT_URL, {
+                        method: "POST",
+                        mode: "no-cors",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            action: "addTrial",
+                            so: data.so,
+                            pro: data.pro,
+                            dateStart: data.dateStart,
+                            dateEnd: data.dateEnd,
+                            chop: data.chop,
+                            name: data.name,
+                            kategori: data.kategori,
+                            attachmentName: data.attachmentName || '',
+                            remarks: data.remarks
+                        })
+                    }).then(() => {
+                        showToast("✅ Berhasil tersimpan otomatis ke Google Sheets!");
+                    }).catch(err => {
+                        console.error("Gagal sinkron Google Sheets:", err);
+                    });
+                }
+            }
+
+            const form = document.getElementById('item-form');
+            if (form) form.reset();
+
+            closeModal('item-modal');
+            renderAll();
+        }
+
+        // --- HELPER & MODAL FUNCTIONS ---
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) modal.classList.add('hidden');
         }
 
         function renderImprovementsGrid() {
@@ -1121,13 +1224,7 @@
             improvements.forEach(imp => {
                 const card = document.createElement('div');
                 card.className = "bg-slate-50 rounded-xl p-4 border border-slate-200/80 hover:border-indigo-300 transition space-y-2 relative group";
-
-                const deleteBtn = isAdminMode
-                    ? `<button onclick="deleteImprovement('${imp.id}')" class="absolute top-3 right-3 text-slate-400 hover:text-rose-600 font-bold text-xs">✕</button>`
-                    : '';
-
                 card.innerHTML = `
-                    ${deleteBtn}
                     <div class="flex items-center space-x-1.5">
                         <span class="bg-indigo-100 text-indigo-800 text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase">${imp.category}</span>
                     </div>
@@ -1142,26 +1239,6 @@
             });
         }
 
-        function updateKPIs() {
-            const filtered = getFilteredTrialItems();
-            const total = filtered.length;
-            const salesOkCount = filtered.filter(i => i.salesUtamaStatus === 'OK').length;
-            const willOrderCount = filtered.filter(i => i.orderStatus === 'Will Order').length;
-            const promoReadyCount = filtered.filter(i => i.kategori === '3x Test (Promo)').length;
-
-            let sbusSet = new Set();
-            filtered.forEach(i => (i.otherSbus || []).forEach(s => sbusSet.add(s)));
-
-            const salesRate = total > 0 ? Math.round((salesOkCount / total) * 100) : 0;
-            const orderRate = total > 0 ? Math.round((willOrderCount / total) * 100) : 0;
-
-            if (document.getElementById('kpi-total')) document.getElementById('kpi-total').textContent = total;
-            if (document.getElementById('kpi-sales-utama')) document.getElementById('kpi-sales-utama').textContent = `${salesRate}%`;
-            if (document.getElementById('kpi-order-rate')) document.getElementById('kpi-order-rate').textContent = `${orderRate}%`;
-            if (document.getElementById('kpi-sbu-interest')) document.getElementById('kpi-sbu-interest').textContent = sbusSet.size;
-            if (document.getElementById('kpi-promo-ready')) document.getElementById('kpi-promo-ready').textContent = promoReadyCount;
-        }
-
         function renderCharts() {
             const filtered = getFilteredTrialItems();
             const total = filtered.length;
@@ -1170,7 +1247,7 @@
             const promoReady = filtered.filter(i => i.kategori === '3x Test (Promo)').length;
 
             const ctxBar = document.getElementById('chart-approval-status')?.getContext('2d');
-            if (ctxBar && typeof Chart !== 'undefined') {
+            if (ctxBar) {
                 if (chartApprovalStatus) chartApprovalStatus.destroy();
                 chartApprovalStatus = new Chart(ctxBar, {
                     type: 'bar',
@@ -1197,7 +1274,7 @@
             const cat3x = filtered.filter(i => i.kategori === '3x Test (Promo)').length;
 
             const ctxDoughnut = document.getElementById('chart-category-doughnut')?.getContext('2d');
-            if (ctxDoughnut && typeof Chart !== 'undefined') {
+            if (ctxDoughnut) {
                 if (chartCategoryDoughnut) chartCategoryDoughnut.destroy();
                 chartCategoryDoughnut = new Chart(ctxDoughnut, {
                     type: 'doughnut',
@@ -1217,368 +1294,6 @@
             }
         }
 
-        // --- EXCEL STYLE COLUMN FILTER POPUP LOGIC ---
-        function toggleExcelFilterMenu(e, colKey) {
-            e.stopPropagation();
-            activeFilterColKey = colKey;
-            const popup = document.getElementById('excel-filter-popup');
-            if (!popup) return;
-
-            const rect = e.target.getBoundingClientRect();
-            popup.style.top = `${rect.bottom + window.scrollY + 5}px`;
-            popup.style.left = `${Math.min(rect.left, window.innerWidth - 270)}px`;
-
-            const titleMap = {
-                so: 'No. SO', pro: 'No. PRO', chop: 'Chop Fabric',
-                name: 'Nama Fabric', kategori: 'Kategori Test',
-                salesUtamaStatus: 'Sales Utama', orderStatus: 'Status Order'
-            };
-
-            document.getElementById('excel-filter-column-title').textContent = `Filter ${titleMap[colKey] || colKey}`;
-            populateExcelFilterCheckboxes(colKey);
-            popup.classList.remove('hidden');
-        }
-
-        function populateExcelFilterCheckboxes(colKey) {
-            const container = document.getElementById('excel-filter-checkboxes');
-            if (!container) return;
-
-            const valuesSet = new Set(trialItems.map(i => i[colKey] || '-'));
-            const values = Array.from(valuesSet).sort();
-            const activeSelected = columnFilters[colKey] || values;
-
-            container.innerHTML = '';
-            values.forEach(val => {
-                const isChecked = activeSelected.includes(val);
-                const label = document.createElement('label');
-                label.className = "flex items-center space-x-2 text-xs text-slate-300 cursor-pointer hover:text-white";
-                label.innerHTML = `
-                    <input type="checkbox" value="${val}" ${isChecked ? 'checked' : ''} class="excel-popup-cb rounded text-indigo-600 focus:ring-0">
-                    <span class="truncate">${val}</span>
-                `;
-                container.appendChild(label);
-            });
-
-            document.getElementById('excel-filter-count-label').textContent = `${values.length} items`;
-        }
-
-        function filterExcelMenuCheckboxes() {
-            const query = (document.getElementById('excel-filter-search')?.value || '').toLowerCase();
-            const labels = document.querySelectorAll('#excel-filter-checkboxes label');
-            labels.forEach(lbl => {
-                const text = lbl.textContent.toLowerCase();
-                lbl.style.display = text.includes(query) ? 'flex' : 'none';
-            });
-        }
-
-        function toggleSelectAllExcelPopup(masterCb) {
-            const checkboxes = document.querySelectorAll('.excel-popup-cb');
-            checkboxes.forEach(cb => cb.checked = masterCb.checked);
-        }
-
-        function applyExcelColumnFilter() {
-            if (!activeFilterColKey) return;
-            const checkboxes = document.querySelectorAll('.excel-popup-cb');
-            const selected = [];
-            checkboxes.forEach(cb => {
-                if (cb.checked) selected.push(cb.value);
-            });
-
-            columnFilters[activeFilterColKey] = selected;
-            closeExcelFilterPopup();
-            updateActiveFiltersBanner();
-            renderAll();
-        }
-
-        function clearFilterForActiveColumn() {
-            if (activeFilterColKey) {
-                delete columnFilters[activeFilterColKey];
-            }
-            closeExcelFilterPopup();
-            updateActiveFiltersBanner();
-            renderAll();
-        }
-
-        function resetAllColumnFilters() {
-            columnFilters = {};
-            updateActiveFiltersBanner();
-            renderAll();
-        }
-
-        function updateActiveFiltersBanner() {
-            const bar = document.getElementById('active-column-filters-bar');
-            const text = document.getElementById('active-filters-list-text');
-            const activeKeys = Object.keys(columnFilters);
-
-            if (activeKeys.length > 0 && bar && text) {
-                text.textContent = activeKeys.map(k => `${k}: (${columnFilters[k].length} terpilih)`).join(', ');
-                bar.classList.remove('hidden');
-            } else if (bar) {
-                bar.classList.add('hidden');
-            }
-        }
-
-        function closeExcelFilterPopup() {
-            const popup = document.getElementById('excel-filter-popup');
-            if (popup) popup.classList.add('hidden');
-        }
-
-        function sortCurrentColumn(dir) {
-            if (!activeFilterColKey) return;
-            trialItems.sort((a, b) => {
-                const valA = (a[activeFilterColKey] || '').toString().toLowerCase();
-                const valB = (b[activeFilterColKey] || '').toString().toLowerCase();
-                if (valA < valB) return dir === 'asc' ? -1 : 1;
-                if (valA > valB) return dir === 'asc' ? 1 : -1;
-                return 0;
-            });
-            closeExcelFilterPopup();
-            renderAll();
-        }
-
-        // --- MODAL & CRUD HANDLERS WITH AUTO-RESET FORM ---
-        function openAddTrialModal() {
-            document.getElementById('modal-title').textContent = "Tambah Item Trial Baru";
-            const form = document.getElementById('item-form');
-            if (form) form.reset();
-            document.getElementById('form-id').value = '';
-            
-            document.querySelectorAll('input[name="sbu-other"]').forEach(cb => cb.checked = false);
-
-            const fileInput = document.getElementById('form-summary-file');
-            if (fileInput) fileInput.value = '';
-
-            const modal = document.getElementById('item-modal');
-            if (modal) modal.classList.remove('hidden');
-        }
-
-        function openEditModal(id) {
-            const item = trialItems.find(i => i.id === id);
-            if (!item) return;
-
-            document.getElementById('modal-title').textContent = "Edit Item Trial";
-            document.getElementById('form-id').value = item.id;
-            document.getElementById('form-so').value = item.so;
-            document.getElementById('form-pro').value = item.pro;
-            document.getElementById('form-date-start').value = item.dateStart || '';
-            document.getElementById('form-date-end').value = item.dateEnd || '';
-            document.getElementById('form-chop').value = item.chop;
-            document.getElementById('form-name').value = item.name;
-            document.getElementById('form-kategori').value = item.kategori;
-            document.getElementById('form-remarks').value = item.remarks || '';
-
-            const fileInput = document.getElementById('form-summary-file');
-            if (fileInput) fileInput.value = '';
-
-            const checkboxes = document.querySelectorAll('input[name="sbu-other"]');
-            checkboxes.forEach(cb => {
-                cb.checked = (item.otherSbus || []).includes(cb.value);
-            });
-
-            const modal = document.getElementById('item-modal');
-            if (modal) modal.classList.remove('hidden');
-        }
-
-        function saveItem(e) {
-            e.preventDefault();
-            const id = document.getElementById('form-id').value;
-            const so = document.getElementById('form-so').value;
-            const pro = document.getElementById('form-pro').value;
-            const dateStart = document.getElementById('form-date-start').value;
-            const dateEnd = document.getElementById('form-date-end').value;
-            const chop = document.getElementById('form-chop').value;
-            const name = document.getElementById('form-name').value;
-            const kategori = document.getElementById('form-kategori').value;
-            const remarks = document.getElementById('form-remarks').value;
-
-            const selectedSbus = [];
-            document.querySelectorAll('input[name="sbu-other"]:checked').forEach(cb => selectedSbus.push(cb.value));
-
-            const fileInput = document.getElementById('form-summary-file');
-            let attachmentName = "";
-            let attachmentData = "";
-
-            if (fileInput && fileInput.files.length > 0) {
-                const file = fileInput.files[0];
-                attachmentName = file.name;
-                const reader = new FileReader();
-                reader.onload = function(evt) {
-                    attachmentData = evt.target.result;
-                    commitSaveItem(id, { so, pro, dateStart, dateEnd, chop, name, kategori, remarks, selectedSbus, attachmentName, attachmentData });
-                };
-                reader.readAsDataURL(file);
-            } else {
-                commitSaveItem(id, { so, pro, dateStart, dateEnd, chop, name, kategori, remarks, selectedSbus });
-            }
-        }
-
-        function commitSaveItem(id, data) {
-            if (id) {
-                const index = trialItems.findIndex(i => i.id === id);
-                if (index !== -1) {
-                    trialItems[index] = {
-                        ...trialItems[index],
-                        so: data.so,
-                        pro: data.pro,
-                        dateStart: data.dateStart,
-                        dateEnd: data.dateEnd,
-                        chop: data.chop,
-                        name: data.name,
-                        kategori: data.kategori,
-                        otherSbus: data.selectedSbus,
-                        remarks: data.remarks,
-                        ...(data.attachmentName ? { attachmentName: data.attachmentName, attachmentData: data.attachmentData } : {})
-                    };
-                }
-            } else {
-                const newItem = {
-                    id: `PRJ-${Date.now()}`,
-                    so: data.so,
-                    pro: data.pro,
-                    dateStart: data.dateStart,
-                    dateEnd: data.dateEnd,
-                    chop: data.chop,
-                    name: data.name,
-                    kategori: data.kategori,
-                    sbuUtama: "SBU 1",
-                    salesUtamaStatus: "OK",
-                    otherSbus: data.selectedSbus,
-                    orderStatus: "Will Order",
-                    rftStage: data.kategori === '3x Test (Promo)' ? '3x Test Selesai (OK)' : 'N/A',
-                    attachmentName: data.attachmentName || '',
-                    attachmentData: data.attachmentData || '',
-                    remarks: data.remarks
-                };
-                trialItems.unshift(newItem);
-
-                // AUTOMATICALLY PUSH NEW DATA TO GOOGLE SHEETS
-                if (GOOGLE_APPS_SCRIPT_URL && GOOGLE_APPS_SCRIPT_URL !== "YOUR_APPS_SCRIPT_WEB_APP_URL_HERE") {
-                    showToast("Mengirim data baru ke Google Sheets...");
-                    fetch(GOOGLE_APPS_SCRIPT_URL, {
-                        method: "POST",
-                        mode: "no-cors",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            action: "addTrial",
-                            so: data.so,
-                            pro: data.pro,
-                            dateStart: data.dateStart,
-                            dateEnd: data.dateEnd,
-                            chop: data.chop,
-                            name: data.name,
-                            kategori: data.kategori,
-                            otherSbus: (data.selectedSbus || []).join('; '),
-                            attachmentName: data.attachmentName || '',
-                            remarks: data.remarks
-                        })
-                    }).then(() => {
-                        showToast("✅ Berhasil tersimpan otomatis ke Google Sheets!");
-                    }).catch(err => {
-                        console.error("Gagal sinkron Google Sheets:", err);
-                    });
-                }
-            }
-
-            const form = document.getElementById('item-form');
-            if (form) form.reset();
-
-            closeModal('item-modal');
-            renderAll();
-        }
-
-        function deleteItem(id) {
-            if (confirm("Apakah Anda yakin ingin menghapus data trial ini dari sesi ini?")) {
-                trialItems = trialItems.filter(i => i.id !== id);
-                showToast("Data trial telah dihapus dari sesi ini");
-                renderAll();
-            }
-        }
-
-        function openImprovementModal() {
-            const form = document.getElementById('improvement-form');
-            if (form) form.reset();
-            const modal = document.getElementById('improvement-modal');
-            if (modal) modal.classList.remove('hidden');
-        }
-
-        function saveImprovement(e) {
-            e.preventDefault();
-            const title = document.getElementById('form-imp-title').value;
-            const category = document.getElementById('form-imp-category').value;
-            const creatorType = document.getElementById('form-imp-creator').value;
-            const date = document.getElementById('form-imp-date').value;
-            const desc = document.getElementById('form-imp-desc').value;
-
-            improvements.unshift({
-                id: `IMP-${Date.now()}`,
-                title, category, creatorType, date, desc
-            });
-
-            const form = document.getElementById('improvement-form');
-            if (form) form.reset();
-
-            closeModal('improvement-modal');
-            showToast("Inisiatif Improvement berhasil ditambahkan!");
-            renderImprovementsGrid();
-        }
-
-        function deleteImprovement(id) {
-            if (confirm("Hapus inisiatif improvement ini?")) {
-                improvements = improvements.filter(i => i.id !== id);
-                showToast("Inisiatif berhasil dihapus");
-                renderImprovementsGrid();
-            }
-        }
-
-        function closeModal(modalId) {
-            const modal = document.getElementById(modalId);
-            if (modal) modal.classList.add('hidden');
-        }
-
-        function handleExcelUpload(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                try {
-                    const data = new Uint8Array(evt.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                    const json = XLSX.utils.sheet_to_json(sheet);
-
-                    if (json.length > 0) {
-                        json.forEach(row => {
-                            trialItems.unshift({
-                                id: `PRJ-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
-                                so: row['No. SO'] || row['so'] || 'SO-NEW',
-                                pro: row['No. PRO'] || row['pro'] || 'PRO-NEW',
-                                dateStart: row['Tgl Buat'] || new Date().toISOString().slice(0, 10),
-                                dateEnd: row['Tgl Selesai'] || '',
-                                chop: row['Chop Fabric'] || row['Chop'] || 'CHOP',
-                                name: row['Nama Fabric'] || row['Fabric'] || 'Fabric Item',
-                                kategori: row['Kategori Test'] || '1x Test / Matrix',
-                                sbuUtama: row['SBU Utama'] || 'SBU 1',
-                                salesUtamaStatus: row['Sales Approval'] || 'OK',
-                                otherSbus: row['Ketertarikan SBU Lain'] ? row['Ketertarikan SBU Lain'].split(', ') : [],
-                                orderStatus: row['Status Order'] || 'Will Order',
-                                rftStage: 'N/A',
-                                attachmentName: '',
-                                attachmentData: '',
-                                remarks: row['Catatan Chemist'] || ''
-                            });
-                        });
-                        saveToLocalStorage();
-                        showToast(`Berhasil mengimpor ${json.length} data dari Excel!`);
-                        renderAll();
-                    }
-                } catch (err) {
-                    alert("Gagal membaca file Excel. Pastikan format kolom sesuai.");
-                }
-            };
-            reader.readAsArrayBuffer(file);
-        }
-
         function renderAll() {
             renderTrialsTable();
             renderImprovementsGrid();
@@ -1586,18 +1301,10 @@
             renderCharts();
         }
 
-        // --- INITIALIZATION ON LOAD ---
         window.onload = function() {
             fetchGoogleSheetsData();
             renderAll();
             updateAdminModeUI();
-            
-            document.addEventListener('click', function(e) {
-                const popup = document.getElementById('excel-filter-popup');
-                if (popup && !popup.contains(e.target) && !e.target.closest('button[onclick*="toggleExcelFilterMenu"]')) {
-                    if (typeof closeExcelFilterPopup === 'function') closeExcelFilterPopup();
-                }
-            });
         };
     </script>
 </body>
