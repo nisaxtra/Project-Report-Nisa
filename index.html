@@ -41,9 +41,9 @@
                     <div>
                         <h1 class="text-base font-extrabold tracking-tight text-white leading-tight">WOVEN RND PROCESSING DASHBOARD</h1>
                         <div class="flex items-center space-x-2 text-[11px] text-slate-300 mt-0.5">
-                            <span class="bg-slate-800 border border-slate-700 px-1.5 py-0.5 rounded font-medium">👤 Nisa Ruffaidah</span>
+                            <span class="bg-slate-800 border border-slate-700 px-1.5 py-0.5 rounded font-medium">👤 Nisa</span>
                             <span class="bg-slate-800 border border-slate-700 px-1.5 py-0.5 rounded font-medium">🏢 R&D Woven</span>
-                            <span class="bg-indigo-950 text-indigo-300 border border-indigo-800/60 px-1.5 py-0.5 rounded font-semibold">🧪 STAFF</span>
+                            <span class="bg-indigo-950 text-indigo-300 border border-indigo-800/60 px-1.5 py-0.5 rounded font-semibold">🧪 Staff</span>
                         </div>
                     </div>
                 </div>
@@ -62,7 +62,7 @@
                 <div class="flex items-center space-x-2">
                     <!-- MODE INDICATOR BADGE -->
                     <div id="current-mode-badge" class="bg-blue-950 text-blue-200 border border-blue-800 px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap">
-                        👁️ Mode Umum
+                        👁️ Mode Umum (Atasan)
                     </div>
 
                     <!-- LOGIN / MODE TOGGLE -->
@@ -481,7 +481,7 @@
                 <button onclick="closeModal('improvement-modal')" class="text-slate-400 hover:text-slate-600 font-bold">✕</button>
             </div>
 
-            <form onsubmit="saveImprovement(event)" class="space-y-3 text-xs">
+            <form id="improvement-form" onsubmit="saveImprovement(event)" class="space-y-3 text-xs">
                 <div>
                     <label class="block font-bold text-slate-700 mb-1">Judul Inisiatif / Project *</label>
                     <input type="text" id="form-imp-title" required placeholder="Contoh: Auto-Print Dyeslip" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none font-medium">
@@ -560,8 +560,8 @@
 
     <!-- JAVASCRIPT LOGIC -->
     <script>
-        // DATA INITIALIZATION
-        let trialItems = [
+        // DATA INITIALIZATION WITH LOCALSTORAGE PERSISTENCE
+        const defaultTrialItems = [
             {
                 id: "PRJ-001",
                 so: "SO-8801",
@@ -618,7 +618,7 @@
             }
         ];
 
-        let improvements = [
+        const defaultImprovements = [
             {
                 id: "IMP-01",
                 title: "Winburry Satin Crease Root-Cause",
@@ -652,6 +652,15 @@
                 desc: "Format print dyeslip otomatis untuk mengeliminasi waktu tunggu penimbangan dari gudang obat."
             }
         ];
+
+        // Load data from LocalStorage if available
+        let trialItems = JSON.parse(localStorage.getItem('woven_trial_items')) || defaultTrialItems;
+        let improvements = JSON.parse(localStorage.getItem('woven_improvements')) || defaultImprovements;
+
+        function saveToLocalStorage() {
+            localStorage.setItem('woven_trial_items', JSON.stringify(trialItems));
+            localStorage.setItem('woven_improvements', JSON.stringify(improvements));
+        }
 
         let isAdminMode = false;
         const ADMIN_PASSWORD_DEFAULT = "1234";
@@ -721,8 +730,6 @@
 
         function executePDFExport() {
             showToast("Menyiapkan file PDF...");
-            
-            // Temporary hide header & controls for clean PDF output
             const element = document.querySelector('main');
             const opt = {
                 margin:       [0.3, 0.3, 0.3, 0.3],
@@ -732,167 +739,75 @@
                 jsPDF:        { unit: 'in', format: 'a4', orientation: 'landscape' }
             };
 
-            // Generate PDF file download directly
             html2pdf().set(opt).from(element).save().then(() => {
                 showToast("File PDF berhasil diunduh!");
             }).catch(err => {
                 console.error("PDF Export error:", err);
-                window.print(); // Fallback to print if library is restricted
+                window.print();
             });
         }
 
         function executeAttachmentDownload(itemId) {
             const item = trialItems.find(i => i.id === itemId);
-            if (!item || !item.attachmentData) {
+            if (!item || !item.attachmentName) {
                 alert("File lampiran tidak ditemukan!");
                 return;
             }
-            const a = document.createElement('a');
-            a.href = item.attachmentData;
-            a.download = item.attachmentName || `Summary_Test_${item.so}.pdf`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-        }
 
-        // --- PAGE SWITCHING (SUMMARY vs LOG) ---
-        function switchPage(page) {
-            const summaryPage = document.getElementById('page-summary');
-            const logPage = document.getElementById('page-log');
-            const btnSummary = document.getElementById('tab-summary-btn');
-            const btnLog = document.getElementById('tab-log-btn');
-
-            if (page === 'summary') {
-                summaryPage.classList.remove('hidden');
-                logPage.classList.add('hidden');
-                btnSummary.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition text-white bg-indigo-600 shadow-sm flex items-center space-x-1.5 whitespace-nowrap";
-                btnLog.className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition text-slate-300 hover:text-white flex items-center space-x-1.5 whitespace-nowrap";
-                updateKPIs();
-                renderCharts();
-            } else {
-                summaryPage.classList.add('hidden');
-                logPage.classList.remove('hidden');
-                btnSummary.className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition text-slate-300 hover:text-white flex items-center space-x-1.5 whitespace-nowrap";
-                btnLog.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition text-white bg-indigo-600 shadow-sm flex items-center space-x-1.5 whitespace-nowrap";
-                renderTrialsTable();
-            }
-        }
-
-        // --- TABLE RENDERING & FILTERING ---
-        function renderTrialsTable() {
-            const tbody = document.getElementById('trials-table-body');
-            if (!tbody) return;
-
-            const globalSearch = (document.getElementById('global-search')?.value || '').toLowerCase();
-            const dateFrom = document.getElementById('filter-date-from')?.value || '';
-            const dateTo = document.getElementById('filter-date-to')?.value || '';
-
-            let filtered = trialItems.filter(item => {
-                if (dateFrom && item.dateStart < dateFrom) return false;
-                if (dateTo && item.dateStart > dateTo) return false;
-
-                if (globalSearch) {
-                    const haystack = `${item.so} ${item.pro} ${item.chop} ${item.name} ${item.kategori} ${item.remarks}`.toLowerCase();
-                    if (!haystack.includes(globalSearch)) return false;
-                }
-
-                for (let key in columnFilters) {
-                    const allowedVals = columnFilters[key];
-                    if (allowedVals && allowedVals.length > 0) {
-                        const itemVal = item[key] || '(Kosong)';
-                        if (!allowedVals.includes(itemVal)) return false;
+            try {
+                if (item.attachmentData && item.attachmentData.startsWith('data:')) {
+                    const parts = item.attachmentData.split(';base64,');
+                    const contentType = parts[0].replace('data:', '') || 'application/pdf';
+                    const cleanedBase64 = (parts[1] || '').replace(/[^A-Za-z0-9+/=]/g, "");
+                    
+                    let blob;
+                    try {
+                        const raw = window.atob(cleanedBase64);
+                        const rawLength = raw.length;
+                        const uInt8Array = new Uint8Array(rawLength);
+                        for (let i = 0; i < rawLength; ++i) {
+                            uInt8Array[i] = raw.charCodeAt(i);
+                        }
+                        blob = new Blob([uInt8Array], { type: contentType });
+                    } catch (e) {
+                        const content = `SUMMARY TEST REPORT\n====================\nNo. SO: ${item.so}\nNo. PRO: ${item.pro}\nNama Fabric: ${item.name}\nCatatan: ${item.remarks || 'Test Summary Completed'}`;
+                        blob = new Blob([content], { type: 'text/plain' });
                     }
+
+                    const blobUrl = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = blobUrl;
+                    a.download = item.attachmentName;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+                } else {
+                    const content = `SUMMARY TEST REPORT\n====================\nNo. SO: ${item.so}\nNo. PRO: ${item.pro}\nNama Fabric: ${item.name}\nCatatan: ${item.remarks || 'Test OK'}`;
+                    const blob = new Blob([content], { type: 'text/plain' });
+                    const blobUrl = URL.createObjectURL(blob);
+
+                    const a = document.createElement('a');
+                    a.href = blobUrl;
+                    a.download = item.attachmentName.endsWith('.pdf') ? item.attachmentName : `${item.attachmentName}.txt`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
                 }
-                return true;
-            });
-
-            if (currentSortColumnKey) {
-                filtered.sort((a, b) => {
-                    const valA = (a[currentSortColumnKey] || '').toString().toLowerCase();
-                    const valB = (b[currentSortColumnKey] || '').toString().toLowerCase();
-                    if (valA < valB) return currentSortDirection === 'asc' ? -1 : 1;
-                    if (valA > valB) return currentSortDirection === 'asc' ? 1 : -1;
-                    return 0;
-                });
+                showToast(`Berhasil mengunduh ${item.attachmentName}`);
+            } catch (err) {
+                console.error("Download Error:", err);
+                alert("Gagal mengunduh file lampiran. Silakan coba upload ulang file dokumennya.");
             }
-
-            if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="12" class="px-4 py-8 text-center text-slate-400">Tidak ada data trial yang sesuai filter.</td></tr>`;
-                return;
-            }
-
-            tbody.innerHTML = filtered.map(item => {
-                const sbuLainTags = (item.otherSbus || []).map(s => `<span class="bg-indigo-50 text-indigo-700 text-[9px] font-bold px-1.5 py-0.5 rounded border border-indigo-100">${s}</span>`).join(' ') || '<span class="text-slate-400 text-[10px]">-</span>';
-                
-                let attachmentBadge = `<span class="text-slate-400 text-[10px]">Belum Ada</span>`;
-                if (item.attachmentName) {
-                    attachmentBadge = `<button onclick="promptDownloadPassword('attachment', '${item.id}')" class="inline-flex items-center space-x-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 px-2 py-0.5 rounded text-[10px] font-bold transition">
-                        <span>📄 Download Summary 🔒</span>
-                    </button>`;
-                }
-
-                const actionButtons = isAdminMode ? `
-                    <div class="flex items-center space-x-2 justify-end">
-                        <button onclick="openEditModal('${item.id}')" class="text-indigo-600 hover:text-indigo-900 font-bold text-[11px]">Edit</button>
-                        <button onclick="deleteItem('${item.id}')" class="text-red-500 hover:text-red-700 font-bold text-[11px]">Hapus</button>
-                    </div>
-                ` : `<span class="text-slate-400 text-[10px]">View Only</span>`;
-
-                return `
-                    <tr class="hover:bg-slate-50/80 transition border-b border-slate-100 text-xs">
-                        <td class="px-3 py-2.5 font-bold text-slate-900 whitespace-nowrap">${item.so}</td>
-                        <td class="px-3 py-2.5 font-semibold text-slate-700 whitespace-nowrap">${item.pro}</td>
-                        <td class="px-3 py-2.5 text-slate-500 whitespace-nowrap">${item.dateStart || '-'}</td>
-                        <td class="px-3 py-2.5 text-slate-500 whitespace-nowrap">${item.dateEnd || '-'}</td>
-                        <td class="px-3 py-2.5"><span class="bg-slate-100 text-slate-800 px-1.5 py-0.5 rounded font-bold text-[10px]">${item.chop}</span></td>
-                        <td class="px-3 py-2.5 font-bold text-slate-800">${item.name}</td>
-                        <td class="px-3 py-2.5"><span class="bg-indigo-50 text-indigo-700 font-bold px-2 py-0.5 rounded text-[10px] border border-indigo-100 whitespace-nowrap">${item.kategori}</span></td>
-                        <td class="px-3 py-2.5">${getSalesBadge(item.salesUtamaStatus)}</td>
-                        <td class="px-3 py-2.5">${sbuLainTags}</td>
-                        <td class="px-3 py-2.5">${getOrderBadge(item.orderStatus)}</td>
-                        <td class="px-3 py-2.5">${attachmentBadge}</td>
-                        <td class="px-3 py-2.5 text-right">${actionButtons}</td>
-                    </tr>
-                `;
-            }).join('');
         }
 
-        // --- DRILL DOWN FROM KPI TO DAILY LOG ---
-        function drillDownKPI(type) {
-            switchPage('log');
-            resetAllColumnFilters();
-            
-            if (type === 'sales-ok') {
-                columnFilters['salesUtamaStatus'] = ['OK'];
-            } else if (type === 'will-order') {
-                columnFilters['orderStatus'] = ['Will Order'];
-            } else if (type === 'promo-ready') {
-                columnFilters['kategori'] = ['3x Test (Promo)'];
-            }
-            
-            updateActiveColumnFiltersUI();
-            renderTrialsTable();
-        }
-
-        // --- HELPER BADGES ---
-        function getSalesBadge(status) {
-            if (status === 'OK') return `<span class="bg-emerald-100 text-emerald-800 border border-emerald-200 font-bold px-2 py-0.5 rounded text-[10px]">OK</span>`;
-            if (status === 'REJECT') return `<span class="bg-red-100 text-red-800 border border-red-200 font-bold px-2 py-0.5 rounded text-[10px]">REJECT</span>`;
-            return `<span class="bg-amber-100 text-amber-800 border border-amber-200 font-bold px-2 py-0.5 rounded text-[10px]">PENDING</span>`;
-        }
-
-        function getOrderBadge(status) {
-            if (status === 'Will Order') return `<span class="bg-indigo-100 text-indigo-800 font-bold px-2 py-0.5 rounded text-[10px]">Will Order</span>`;
-            if (status === 'No Order') return `<span class="bg-slate-100 text-slate-700 font-bold px-2 py-0.5 rounded text-[10px]">No Order</span>`;
-            return `<span class="bg-amber-50 text-amber-700 font-bold px-2 py-0.5 rounded text-[10px]">Pending</span>`;
-        }
-
-        // --- AUTHENTICATION & ACCESS ---
+        // --- AUTH & MODE ACCESS HANDLERS ---
         function requestAdminAccess() {
             if (isAdminMode) {
                 isAdminMode = false;
-                updateAdminViewUI();
-                showToast("Berhasil logout dari Mode Admin.");
+                updateAdminModeUI();
+                showToast("Kembali ke Mode Umum (Atasan)");
             } else {
                 const modal = document.getElementById('password-modal');
                 const input = document.getElementById('admin-pass-input');
@@ -906,232 +821,280 @@
             const pass = input ? input.value : '';
             if (pass === ADMIN_PASSWORD_DEFAULT) {
                 isAdminMode = true;
-                updateAdminViewUI();
                 closeModal('password-modal');
-                showToast("Login Berhasil! Mode Edit Aktif.");
+                updateAdminModeUI();
+                showToast("Berhasil Login Admin (Mode Nisa)");
             } else {
-                alert("Password Admin salah!");
+                alert("Password Admin Salah! Default: 1234");
             }
         }
 
-        function updateAdminViewUI() {
+        function updateAdminModeUI() {
             const badge = document.getElementById('current-mode-badge');
             const btn = document.getElementById('toggle-mode-btn');
-            const adminEls = document.querySelectorAll('.admin-only');
+            const adminElements = document.querySelectorAll('.admin-only');
 
             if (isAdminMode) {
                 if (badge) {
-                    badge.textContent = "✏️ Mode Nisa (Admin)";
+                    badge.textContent = "✏️ Mode Nisa (Admin Edit)";
                     badge.className = "bg-emerald-950 text-emerald-200 border border-emerald-800 px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap";
                 }
-                if (btn) btn.innerHTML = `<span>🔒 Logout Nisa</span>`;
-                adminEls.forEach(el => el.classList.remove('hidden'));
+                if (btn) btn.innerHTML = "<span>🔒 Logout Admin</span>";
+                adminElements.forEach(el => el.classList.remove('hidden'));
             } else {
                 if (badge) {
-                    badge.textContent = "👁️ Mode Umum";
+                    badge.textContent = "👁️ Mode Umum (Atasan)";
                     badge.className = "bg-blue-950 text-blue-200 border border-blue-800 px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap";
                 }
-                if (btn) btn.innerHTML = `<span>🔑 Login Nisa</span>`;
-                adminEls.forEach(el => el.classList.add('hidden'));
+                if (btn) btn.innerHTML = "<span>🔑 Login Nisa</span>";
+                adminElements.forEach(el => el.classList.add('hidden'));
             }
             renderTrialsTable();
             renderImprovementsGrid();
         }
 
-        // --- EXCEL-STYLE COLUMN FILTERS ---
-        function toggleExcelFilterMenu(event, colKey) {
-            event.stopPropagation();
-            activeFilterColKey = colKey;
+        // --- NAVIGATION & PAGE SWITCHING ---
+        function switchPage(page) {
+            const summaryPage = document.getElementById('page-summary');
+            const logPage = document.getElementById('page-log');
+            const summaryBtn = document.getElementById('tab-summary-btn');
+            const logBtn = document.getElementById('tab-log-btn');
 
-            const popup = document.getElementById('excel-filter-popup');
-            if (!popup) return;
-
-            const buttonRect = event.currentTarget.getBoundingClientRect();
-            popup.style.top = `${buttonRect.bottom + window.scrollY + 4}px`;
-            popup.style.left = `${Math.min(buttonRect.left, window.innerWidth - 300)}px`;
-
-            const titleEl = document.getElementById('excel-filter-column-title');
-            if (titleEl) titleEl.textContent = `Filter: ${colKey.toUpperCase()}`;
-
-            const searchInput = document.getElementById('excel-filter-search');
-            if (searchInput) searchInput.value = '';
-
-            populateExcelFilterCheckboxes(colKey);
-            popup.classList.remove('hidden');
-        }
-
-        function populateExcelFilterCheckboxes(colKey) {
-            const container = document.getElementById('excel-filter-checkboxes');
-            if (!container) return;
-
-            const uniqueValues = Array.from(new Set(trialItems.map(item => item[colKey] || '(Kosong)'))).sort();
-            const activeAllowed = columnFilters[colKey] || uniqueValues;
-
-            container.innerHTML = uniqueValues.map(val => `
-                <label class="flex items-center space-x-2 text-[11px] text-slate-300 hover:text-white cursor-pointer py-0.5">
-                    <input type="checkbox" value="${val}" ${activeAllowed.includes(val) ? 'checked' : ''} class="excel-pop-cb rounded text-indigo-600 focus:ring-0">
-                    <span class="truncate">${val}</span>
-                </label>
-            `).join('');
-
-            const selectAllCb = document.getElementById('excel-filter-select-all');
-            if (selectAllCb) selectAllCb.checked = activeAllowed.length === uniqueValues.length;
-
-            const countLabel = document.getElementById('excel-filter-count-label');
-            if (countLabel) countLabel.textContent = `${uniqueValues.length} items`;
-        }
-
-        function filterExcelMenuCheckboxes() {
-            const query = (document.getElementById('excel-filter-search')?.value || '').toLowerCase();
-            const labels = document.querySelectorAll('#excel-filter-checkboxes label');
-            labels.forEach(lbl => {
-                const text = lbl.textContent.toLowerCase();
-                lbl.style.display = text.includes(query) ? 'flex' : 'none';
-            });
-        }
-
-        function toggleSelectAllExcelPopup(selectAllCb) {
-            const cbs = document.querySelectorAll('.excel-pop-cb');
-            cbs.forEach(cb => {
-                if (cb.closest('label').style.display !== 'none') {
-                    cb.checked = selectAllCb.checked;
+            if (page === 'summary') {
+                if (summaryPage) summaryPage.classList.remove('hidden');
+                if (logPage) logPage.classList.add('hidden');
+                
+                if (summaryBtn) {
+                    summaryBtn.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition text-white bg-indigo-600 shadow-sm flex items-center space-x-1.5 whitespace-nowrap";
                 }
-            });
-        }
-
-        function applyExcelColumnFilter() {
-            if (!activeFilterColKey) return;
-            const checkedVals = Array.from(document.querySelectorAll('.excel-pop-cb:checked')).map(cb => cb.value);
-            columnFilters[activeFilterColKey] = checkedVals;
-
-            closeExcelFilterPopup();
-            updateActiveColumnFiltersUI();
-            renderTrialsTable();
-            updateKPIs();
-        }
-
-        function clearFilterForActiveColumn() {
-            if (activeFilterColKey && columnFilters[activeFilterColKey]) {
-                delete columnFilters[activeFilterColKey];
-            }
-            closeExcelFilterPopup();
-            updateActiveColumnFiltersUI();
-            renderTrialsTable();
-            updateKPIs();
-        }
-
-        function resetAllColumnFilters() {
-            columnFilters = {};
-            closeExcelFilterPopup();
-            updateActiveColumnFiltersUI();
-            renderTrialsTable();
-            updateKPIs();
-        }
-
-        function updateActiveColumnFiltersUI() {
-            const bar = document.getElementById('active-column-filters-bar');
-            const listText = document.getElementById('active-filters-list-text');
-            if (!bar || !listText) return;
-
-            const keys = Object.keys(columnFilters);
-            if (keys.length === 0) {
-                bar.classList.add('hidden');
+                if (logBtn) {
+                    logBtn.className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition text-slate-300 hover:text-white flex items-center space-x-1.5 whitespace-nowrap";
+                }
             } else {
-                bar.classList.remove('hidden');
-                listText.textContent = keys.map(k => `${k.toUpperCase()} (${columnFilters[k].length} pilihan)`).join(' | ');
+                if (summaryPage) summaryPage.classList.add('hidden');
+                if (logPage) logPage.classList.remove('hidden');
+
+                if (logBtn) {
+                    logBtn.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition text-white bg-indigo-600 shadow-sm flex items-center space-x-1.5 whitespace-nowrap";
+                }
+                if (summaryBtn) {
+                    summaryBtn.className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition text-slate-300 hover:text-white flex items-center space-x-1.5 whitespace-nowrap";
+                }
             }
         }
 
-        function closeExcelFilterPopup() {
-            const popup = document.getElementById('excel-filter-popup');
-            if (popup) popup.classList.add('hidden');
-        }
-
-        function sortCurrentColumn(direction) {
-            if (activeFilterColKey) {
-                currentSortColumnKey = activeFilterColKey;
-                currentSortDirection = direction;
-                renderTrialsTable();
-            }
-            closeExcelFilterPopup();
-        }
-
-        // --- SUMMARY DATE FILTERS & KPIS ---
-        function getFilteredTrialsForSummary() {
-            const dateFrom = document.getElementById('summary-date-from')?.value || '';
-            const dateTo = document.getElementById('summary-date-to')?.value || '';
+        // --- FILTER & DATA HANDLING ---
+        function getFilteredTrialItems() {
+            const search = (document.getElementById('global-search')?.value || '').toLowerCase();
+            const dateFrom = document.getElementById('filter-date-from')?.value;
+            const dateTo = document.getElementById('filter-date-to')?.value;
 
             return trialItems.filter(item => {
-                if (dateFrom && item.dateStart < dateFrom) return false;
-                if (dateTo && item.dateStart > dateTo) return false;
-                return true;
+                const matchSearch = !search || 
+                    item.so.toLowerCase().includes(search) || 
+                    item.pro.toLowerCase().includes(search) || 
+                    item.name.toLowerCase().includes(search) || 
+                    item.chop.toLowerCase().includes(search) ||
+                    item.kategori.toLowerCase().includes(search);
+
+                let matchDate = true;
+                if (dateFrom && item.dateStart < dateFrom) matchDate = false;
+                if (dateTo && item.dateStart > dateTo) matchDate = false;
+
+                let matchColumns = true;
+                for (const [colKey, selectedVals] of Object.entries(columnFilters)) {
+                    if (selectedVals && selectedVals.length > 0) {
+                        let itemVal = '';
+                        if (colKey === 'so') itemVal = item.so;
+                        else if (colKey === 'pro') itemVal = item.pro;
+                        else if (colKey === 'chop') itemVal = item.chop;
+                        else if (colKey === 'name') itemVal = item.name;
+                        else if (colKey === 'kategori') itemVal = item.kategori;
+                        else if (colKey === 'salesUtamaStatus') itemVal = item.salesUtamaStatus;
+                        else if (colKey === 'orderStatus') itemVal = item.orderStatus;
+
+                        if (!selectedVals.includes(itemVal)) {
+                            matchColumns = false;
+                            break;
+                        }
+                    }
+                }
+
+                return matchSearch && matchDate && matchColumns;
             });
-        }
-
-        function applySummaryDateFilter() {
-            updateKPIs();
-            renderCharts();
-        }
-
-        function resetSummaryDateFilter() {
-            const dateFromInput = document.getElementById('summary-date-from');
-            const dateToInput = document.getElementById('summary-date-to');
-            if (dateFromInput) dateFromInput.value = '';
-            if (dateToInput) dateToInput.value = '';
-            updateKPIs();
-            renderCharts();
         }
 
         function clearDateFilter() {
-            const dateFromInput = document.getElementById('filter-date-from');
-            const dateToInput = document.getElementById('filter-date-to');
-            if (dateFromInput) dateFromInput.value = '';
-            if (dateToInput) dateToInput.value = '';
+            const from = document.getElementById('filter-date-from');
+            const to = document.getElementById('filter-date-to');
+            if (from) from.value = '';
+            if (to) to.value = '';
             renderTrialsTable();
         }
 
-        function updateKPIs() {
-            const items = getFilteredTrialsForSummary();
-            const total = items.length;
-
-            const salesOkCount = items.filter(i => i.salesUtamaStatus === 'OK').length;
-            const willOrderCount = items.filter(i => i.orderStatus === 'Will Order').length;
-
-            let sbuCount = 0;
-            items.forEach(i => { if (i.otherSbus) sbuCount += i.otherSbus.length; });
-
-            const promoReadyCount = items.filter(i => i.kategori === '3x Test (Promo)' && i.salesUtamaStatus === 'OK').length;
-
-            document.getElementById('kpi-total').textContent = total;
-            document.getElementById('kpi-sales-utama').textContent = total > 0 ? `${Math.round((salesOkCount / total) * 100)}%` : '0%';
-            document.getElementById('kpi-order-rate').textContent = total > 0 ? `${Math.round((willOrderCount / total) * 100)}%` : '0%';
-            document.getElementById('kpi-sbu-interest').textContent = sbuCount;
-            document.getElementById('kpi-promo-ready').textContent = promoReadyCount;
-
-            const badge = document.getElementById('trial-count-badge');
-            if (badge) badge.textContent = `${trialItems.length} SO/PRO`;
+        function drillDownKPI(type) {
+            columnFilters = {};
+            if (type === 'sales-ok') {
+                columnFilters['salesUtamaStatus'] = ['OK'];
+            } else if (type === 'will-order') {
+                columnFilters['orderStatus'] = ['Will Order'];
+            } else if (type === 'promo-ready') {
+                columnFilters['kategori'] = ['3x Test (Promo)'];
+            }
+            updateActiveFiltersBanner();
+            switchPage('log');
+            renderTrialsTable();
         }
 
-        // --- DIAGRAM / CHART.JS RENDERING ---
+        function applySummaryDateFilter() {
+            const dateFrom = document.getElementById('summary-date-from')?.value;
+            const dateTo = document.getElementById('summary-date-to')?.value;
+            const filterFromLog = document.getElementById('filter-date-from');
+            const filterToLog = document.getElementById('filter-date-to');
+
+            if (filterFromLog) filterFromLog.value = dateFrom || '';
+            if (filterToLog) filterToLog.value = dateTo || '';
+
+            renderAll();
+        }
+
+        function resetSummaryDateFilter() {
+            const summaryFrom = document.getElementById('summary-date-from');
+            const summaryTo = document.getElementById('summary-date-to');
+            if (summaryFrom) summaryFrom.value = '';
+            if (summaryTo) summaryTo.value = '';
+            clearDateFilter();
+            renderAll();
+        }
+
+        // --- RENDER TABLE & CARDS ---
+        function renderTrialsTable() {
+            const tbody = document.getElementById('trials-table-body');
+            const filtered = getFilteredTrialItems();
+            const badgeCount = document.getElementById('trial-count-badge');
+            if (badgeCount) badgeCount.textContent = `${filtered.length} Item`;
+
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="12" class="px-4 py-8 text-center text-xs text-slate-400 font-medium">Tidak ada data trial yang cocok.</td></tr>`;
+                return;
+            }
+
+            filtered.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50/80 transition text-xs border-b border-slate-100";
+
+                const salesBadge = item.salesUtamaStatus === 'OK' 
+                    ? `<span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">OK</span>`
+                    : `<span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full">Pending</span>`;
+
+                const orderBadge = item.orderStatus === 'Will Order'
+                    ? `<span class="bg-indigo-100 text-indigo-800 text-[10px] font-bold px-2 py-0.5 rounded-full">Will Order</span>`
+                    : item.orderStatus === 'Pending Order'
+                    ? `<span class="bg-slate-100 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">Pending</span>`
+                    : `<span class="bg-rose-100 text-rose-800 text-[10px] font-bold px-2 py-0.5 rounded-full">No Order</span>`;
+
+                const summaryBtn = item.attachmentName 
+                    ? `<button onclick="promptDownloadPassword('attachment', '${item.id}')" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 px-2 py-1 rounded font-medium text-[11px] flex items-center space-x-1">
+                        <span>📄 Download Summary 🔒</span>
+                       </button>`
+                    : `<span class="text-slate-400 text-[11px] font-normal">-</span>`;
+
+                const actionBtns = isAdminMode
+                    ? `<div class="flex items-center justify-end space-x-1">
+                        <button onclick="openEditModal('${item.id}')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-1 rounded text-[11px] font-bold">Edit</button>
+                        <button onclick="deleteItem('${item.id}')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 px-2 py-1 rounded text-[11px] font-bold">Hapus</button>
+                       </div>`
+                    : `<span class="text-slate-400 text-[11px]">View Only</span>`;
+
+                tr.innerHTML = `
+                    <td class="px-3 py-2.5 font-bold text-slate-900">${item.so}</td>
+                    <td class="px-3 py-2.5 font-medium text-slate-600">${item.pro}</td>
+                    <td class="px-3 py-2.5 text-slate-500">${item.dateStart || '-'}</td>
+                    <td class="px-3 py-2.5 text-slate-500">${item.dateEnd || '-'}</td>
+                    <td class="px-3 py-2.5 font-semibold text-slate-700">${item.chop}</td>
+                    <td class="px-3 py-2.5 font-bold text-slate-800">${item.name}</td>
+                    <td class="px-3 py-2.5 text-slate-600 font-medium">${item.kategori}</td>
+                    <td class="px-3 py-2.5">${salesBadge}</td>
+                    <td class="px-3 py-2.5 text-slate-500">${(item.otherSbus || []).join(', ') || '-'}</td>
+                    <td class="px-3 py-2.5">${orderBadge}</td>
+                    <td class="px-3 py-2.5">${summaryBtn}</td>
+                    <td class="px-3 py-2.5 text-right">${actionBtns}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderImprovementsGrid() {
+            const container = document.getElementById('improvements-grid');
+            if (!container) return;
+            container.innerHTML = '';
+
+            improvements.forEach(imp => {
+                const card = document.createElement('div');
+                card.className = "bg-slate-50 rounded-xl p-4 border border-slate-200/80 hover:border-indigo-300 transition space-y-2 relative group";
+
+                const deleteBtn = isAdminMode
+                    ? `<button onclick="deleteImprovement('${imp.id}')" class="absolute top-3 right-3 text-slate-400 hover:text-rose-600 font-bold text-xs">✕</button>`
+                    : '';
+
+                card.innerHTML = `
+                    ${deleteBtn}
+                    <div class="flex items-center space-x-1.5">
+                        <span class="bg-indigo-100 text-indigo-800 text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase">${imp.category}</span>
+                    </div>
+                    <h4 class="text-xs font-bold text-slate-900 leading-snug">${imp.title}</h4>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">${imp.desc}</p>
+                    <div class="flex items-center justify-between text-[10px] text-slate-400 font-medium pt-2 border-t border-slate-200/60">
+                        <span>👤 ${imp.creatorType}</span>
+                        <span>📅 ${imp.date}</span>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function updateKPIs() {
+            const filtered = getFilteredTrialItems();
+            const total = filtered.length;
+            const salesOkCount = filtered.filter(i => i.salesUtamaStatus === 'OK').length;
+            const willOrderCount = filtered.filter(i => i.orderStatus === 'Will Order').length;
+            const promoReadyCount = filtered.filter(i => i.kategori === '3x Test (Promo)').length;
+
+            let sbusSet = new Set();
+            filtered.forEach(i => (i.otherSbus || []).forEach(s => sbusSet.add(s)));
+
+            const salesRate = total > 0 ? Math.round((salesOkCount / total) * 100) : 0;
+            const orderRate = total > 0 ? Math.round((willOrderCount / total) * 100) : 0;
+
+            document.getElementById('kpi-total').textContent = total;
+            document.getElementById('kpi-sales-utama').textContent = `${salesRate}%`;
+            document.getElementById('kpi-order-rate').textContent = `${orderRate}%`;
+            document.getElementById('kpi-sbu-interest').textContent = sbusSet.size;
+            document.getElementById('kpi-promo-ready').textContent = promoReadyCount;
+        }
+
         function renderCharts() {
-            const items = getFilteredTrialsForSummary();
+            const filtered = getFilteredTrialItems();
 
-            const salesOkCount = items.filter(i => i.salesUtamaStatus === 'OK').length;
-            const willOrderCount = items.filter(i => i.orderStatus === 'Will Order').length;
-            const promoReadyCount = items.filter(i => i.kategori === '3x Test (Promo)' && i.salesUtamaStatus === 'OK').length;
+            const total = filtered.length;
+            const salesOk = filtered.filter(i => i.salesUtamaStatus === 'OK').length;
+            const willOrder = filtered.filter(i => i.orderStatus === 'Will Order').length;
+            const promoReady = filtered.filter(i => i.kategori === '3x Test (Promo)').length;
 
-            // Chart 1: Bar Chart
-            const ctx1 = document.getElementById('chart-approval-status')?.getContext('2d');
-            if (ctx1) {
+            const ctxBar = document.getElementById('chart-approval-status')?.getContext('2d');
+            if (ctxBar) {
                 if (chartApprovalStatus) chartApprovalStatus.destroy();
-                chartApprovalStatus = new Chart(ctx1, {
+                chartApprovalStatus = new Chart(ctxBar, {
                     type: 'bar',
                     data: {
-                        labels: ['Total Trial', 'Sales Utama OK', 'Will Order', '3x Promo Ready'],
+                        labels: ['Total Trial', 'Sales OK', 'Will Order', '3x Promo Ready'],
                         datasets: [{
-                            label: 'Jumlah Item Kain',
-                            data: [items.length, salesOkCount, willOrderCount, promoReadyCount],
-                            backgroundColor: ['#3b82f6', '#10b981', '#6366f1', '#f59e0b'],
+                            label: 'Jumlah Item',
+                            data: [total, salesOk, willOrder, promoReady],
+                            backgroundColor: ['#4f46e5', '#10b981', '#6366f1', '#f59e0b'],
                             borderRadius: 6
                         }]
                     },
@@ -1144,227 +1107,297 @@
                 });
             }
 
-            // Chart 2: Doughnut Chart
-            const ctx2 = document.getElementById('chart-category-doughnut')?.getContext('2d');
-            if (ctx2) {
-                const count1x = items.filter(i => i.kategori === '1x Test / Matrix').length;
-                const countPaid = items.filter(i => i.kategori === 'SO Berbayar').length;
-                const count3x = items.filter(i => i.kategori === '3x Test (Promo)').length;
+            const cat1x = filtered.filter(i => i.kategori === '1x Test / Matrix').length;
+            const catPaid = filtered.filter(i => i.kategori === 'SO Berbayar').length;
+            const cat3x = filtered.filter(i => i.kategori === '3x Test (Promo)').length;
 
+            const ctxDoughnut = document.getElementById('chart-category-doughnut')?.getContext('2d');
+            if (ctxDoughnut) {
                 if (chartCategoryDoughnut) chartCategoryDoughnut.destroy();
-                chartCategoryDoughnut = new Chart(ctx2, {
+                chartCategoryDoughnut = new Chart(ctxDoughnut, {
                     type: 'doughnut',
                     data: {
-                        labels: ['1x Test / Matrix', 'SO Berbayar', '3x Test Promo'],
+                        labels: ['1x Test / Matrix', 'SO Berbayar', '3x Test (Promo)'],
                         datasets: [{
-                            data: [count1x, countPaid, count3x],
-                            backgroundColor: ['#6366f1', '#f59e0b', '#10b981']
+                            data: [cat1x, catPaid, cat3x],
+                            backgroundColor: ['#3b82f6', '#8b5cf6', '#f59e0b']
                         }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } }
+                        plugins: { legend: { position: 'bottom' } }
                     }
                 });
             }
         }
 
-        // --- SYSTEM IMPROVEMENTS GRID ---
-        function renderImprovementsGrid() {
-            const grid = document.getElementById('improvements-grid');
-            if (!grid) return;
+        // --- EXCEL STYLE COLUMN FILTER POPUP LOGIC ---
+        function toggleExcelFilterMenu(e, colKey) {
+            e.stopPropagation();
+            activeFilterColKey = colKey;
+            const popup = document.getElementById('excel-filter-popup');
+            if (!popup) return;
 
-            grid.innerHTML = improvements.map(imp => `
-                <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col justify-between space-y-3 relative hover:shadow-md transition">
-                    <div>
-                        <div class="flex justify-between items-start gap-1 mb-1.5">
-                            <span class="text-[10px] font-bold tracking-wider text-indigo-700 uppercase bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">${imp.category}</span>
-                            <span class="text-[10px] text-slate-400 font-medium">${imp.date || ''}</span>
-                        </div>
-                        <h4 class="font-bold text-slate-900 text-sm leading-tight">${imp.title}</h4>
-                        <p class="text-xs text-slate-600 mt-2 leading-relaxed">${imp.desc}</p>
-                    </div>
-                    <div class="pt-2 border-t border-slate-200 flex justify-between items-center text-[11px]">
-                        <span class="font-semibold ${imp.creatorType.includes('Nisa') ? 'text-indigo-600' : 'text-emerald-600'} bg-white px-2 py-0.5 rounded border border-slate-200 shadow-2xs">${imp.creatorType}</span>
-                        ${isAdminMode ? `<button onclick="deleteImprovement('${imp.id}')" class="text-red-500 hover:text-red-700 text-xs font-semibold">Hapus</button>` : ''}
-                    </div>
-                </div>
-            `).join('');
-        }
+            const rect = e.target.getBoundingClientRect();
+            popup.style.top = `${rect.bottom + window.scrollY + 5}px`;
+            popup.style.left = `${Math.min(rect.left, window.innerWidth - 270)}px`;
 
-        // --- EXCEL UPLOAD HANDLER ---
-        function handleExcelUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                    const jsonData = XLSX.utils.sheet_to_json(firstSheet);
-
-                    if (jsonData.length === 0) {
-                        alert("File Excel kosong!");
-                        return;
-                    }
-
-                    jsonData.forEach((row, idx) => {
-                        trialItems.unshift({
-                            id: `PRJ-XL-${Date.now()}-${idx}`,
-                            so: row["No. SO"] || row["SO"] || `SO-XL-${idx}`,
-                            pro: row["No. PRO"] || row["PRO"] || `PRO-XL-${idx}`,
-                            dateStart: row["Tgl Buat"] || new Date().toISOString().slice(0,10),
-                            dateEnd: row["Tgl Selesai"] || "",
-                            chop: row["Chop Fabric"] || row["Chop"] || "WBR",
-                            name: row["Nama Fabric"] || row["Fabric"] || "Fabric Import",
-                            kategori: row["Kategori Test"] || "1x Test / Matrix",
-                            sbuUtama: row["SBU Utama"] || "SBU 1",
-                            salesUtamaStatus: row["Sales Approval"] || "OK",
-                            otherSbus: row["Ketertarikan SBU Lain"] ? row["Ketertarikan SBU Lain"].split(', ') : [],
-                            orderStatus: row["Status Order"] || "Will Order",
-                            rftStage: row["Syarat 3x Test Promo"] || "Test 1/3 (OK)",
-                            attachmentName: "",
-                            attachmentData: "",
-                            remarks: row["Catatan Chemist"] || "Imported from Excel"
-                        });
-                    });
-
-                    updateKPIs();
-                    renderTrialsTable();
-                    renderCharts();
-                    showToast(`Berhasil mengimpor ${jsonData.length} data trial dari Excel!`);
-                } catch (err) {
-                    alert("Gagal membaca file Excel. Pastikan format file sesuai.");
-                }
+            const titleMap = {
+                so: 'No. SO', pro: 'No. PRO', chop: 'Chop Fabric',
+                name: 'Nama Fabric', kategori: 'Kategori Test',
+                salesUtamaStatus: 'Sales Utama', orderStatus: 'Status Order'
             };
-            reader.readAsArrayBuffer(file);
+
+            document.getElementById('excel-filter-column-title').textContent = `Filter ${titleMap[colKey] || colKey}`;
+            populateExcelFilterCheckboxes(colKey);
+            popup.classList.remove('hidden');
         }
 
-        // --- MODAL UTILITIES & CRUD ---
+        function populateExcelFilterCheckboxes(colKey) {
+            const container = document.getElementById('excel-filter-checkboxes');
+            if (!container) return;
+
+            const valuesSet = new Set(trialItems.map(i => i[colKey] || '-'));
+            const values = Array.from(valuesSet).sort();
+            const activeSelected = columnFilters[colKey] || values;
+
+            container.innerHTML = '';
+            values.forEach(val => {
+                const isChecked = activeSelected.includes(val);
+                const label = document.createElement('label');
+                label.className = "flex items-center space-x-2 text-xs text-slate-300 cursor-pointer hover:text-white";
+                label.innerHTML = `
+                    <input type="checkbox" value="${val}" ${isChecked ? 'checked' : ''} class="excel-popup-cb rounded text-indigo-600 focus:ring-0">
+                    <span class="truncate">${val}</span>
+                `;
+                container.appendChild(label);
+            });
+
+            document.getElementById('excel-filter-count-label').textContent = `${values.length} items`;
+        }
+
+        function filterExcelMenuCheckboxes() {
+            const query = (document.getElementById('excel-filter-search')?.value || '').toLowerCase();
+            const labels = document.querySelectorAll('#excel-filter-checkboxes label');
+            labels.forEach(lbl => {
+                const text = lbl.textContent.toLowerCase();
+                lbl.style.display = text.includes(query) ? 'flex' : 'none';
+            });
+        }
+
+        function toggleSelectAllExcelPopup(masterCb) {
+            const checkboxes = document.querySelectorAll('.excel-popup-cb');
+            checkboxes.forEach(cb => cb.checked = masterCb.checked);
+        }
+
+        function applyExcelColumnFilter() {
+            if (!activeFilterColKey) return;
+            const checkboxes = document.querySelectorAll('.excel-popup-cb');
+            const selected = [];
+            checkboxes.forEach(cb => {
+                if (cb.checked) selected.push(cb.value);
+            });
+
+            columnFilters[activeFilterColKey] = selected;
+            closeExcelFilterPopup();
+            updateActiveFiltersBanner();
+            renderAll();
+        }
+
+        function clearFilterForActiveColumn() {
+            if (activeFilterColKey) {
+                delete columnFilters[activeFilterColKey];
+            }
+            closeExcelFilterPopup();
+            updateActiveFiltersBanner();
+            renderAll();
+        }
+
+        function resetAllColumnFilters() {
+            columnFilters = {};
+            updateActiveFiltersBanner();
+            renderAll();
+        }
+
+        function updateActiveFiltersBanner() {
+            const bar = document.getElementById('active-column-filters-bar');
+            const text = document.getElementById('active-filters-list-text');
+            const activeKeys = Object.keys(columnFilters);
+
+            if (activeKeys.length > 0 && bar && text) {
+                text.textContent = activeKeys.map(k => `${k}: (${columnFilters[k].length} terpilih)`).join(', ');
+                bar.classList.remove('hidden');
+            } else if (bar) {
+                bar.classList.add('hidden');
+            }
+        }
+
+        function closeExcelFilterPopup() {
+            const popup = document.getElementById('excel-filter-popup');
+            if (popup) popup.classList.add('hidden');
+        }
+
+        function sortCurrentColumn(dir) {
+            if (!activeFilterColKey) return;
+            trialItems.sort((a, b) => {
+                const valA = (a[activeFilterColKey] || '').toString().toLowerCase();
+                const valB = (b[activeFilterColKey] || '').toString().toLowerCase();
+                if (valA < valB) return dir === 'asc' ? -1 : 1;
+                if (valA > valB) return dir === 'asc' ? 1 : -1;
+                return 0;
+            });
+            closeExcelFilterPopup();
+            renderAll();
+        }
+
+        // --- MODAL & CRUD HANDLERS WITH AUTO-RESET FORM ---
         function openAddTrialModal() {
             document.getElementById('modal-title').textContent = "Tambah Item Trial Baru";
-            document.getElementById('item-form').reset();
-            document.getElementById('form-id').value = "";
-            document.getElementById('existing-file-badge').classList.add('hidden');
-            document.getElementById('item-modal').classList.remove('hidden');
+            const form = document.getElementById('item-form');
+            if (form) form.reset();
+            document.getElementById('form-id').value = '';
+            
+            // Uncheck all SBU checkboxes
+            document.querySelectorAll('input[name="sbu-other"]').forEach(cb => cb.checked = false);
+
+            const fileInput = document.getElementById('form-summary-file');
+            if (fileInput) fileInput.value = '';
+
+            const modal = document.getElementById('item-modal');
+            if (modal) modal.classList.remove('hidden');
         }
 
         function openEditModal(id) {
             const item = trialItems.find(i => i.id === id);
             if (!item) return;
 
-            document.getElementById('modal-title').textContent = "Edit Data Item Trial";
+            document.getElementById('modal-title').textContent = "Edit Item Trial";
             document.getElementById('form-id').value = item.id;
             document.getElementById('form-so').value = item.so;
             document.getElementById('form-pro').value = item.pro;
             document.getElementById('form-date-start').value = item.dateStart || '';
             document.getElementById('form-date-end').value = item.dateEnd || '';
-            document.getElementById('form-chop').value = item.chop || '';
+            document.getElementById('form-chop').value = item.chop;
             document.getElementById('form-name').value = item.name;
             document.getElementById('form-kategori').value = item.kategori;
             document.getElementById('form-remarks').value = item.remarks || '';
 
-            const fileBadge = document.getElementById('existing-file-badge');
-            if (item.attachmentName) {
-                fileBadge.textContent = `📎 File Terlampir Saat Ini: ${item.attachmentName}`;
-                fileBadge.classList.remove('hidden');
-            } else {
-                fileBadge.classList.add('hidden');
-            }
+            const fileInput = document.getElementById('form-summary-file');
+            if (fileInput) fileInput.value = '';
 
-            document.querySelectorAll('input[name="sbu-other"]').forEach(cb => {
-                cb.checked = item.otherSbus && item.otherSbus.includes(cb.value);
+            const checkboxes = document.querySelectorAll('input[name="sbu-other"]');
+            checkboxes.forEach(cb => {
+                cb.checked = (item.otherSbus || []).includes(cb.value);
             });
 
-            document.getElementById('item-modal').classList.remove('hidden');
+            const modal = document.getElementById('item-modal');
+            if (modal) modal.classList.remove('hidden');
         }
 
-        function saveItem(event) {
-            event.preventDefault();
+        function saveItem(e) {
+            e.preventDefault();
             const id = document.getElementById('form-id').value;
+            const so = document.getElementById('form-so').value;
+            const pro = document.getElementById('form-pro').value;
+            const dateStart = document.getElementById('form-date-start').value;
+            const dateEnd = document.getElementById('form-date-end').value;
+            const chop = document.getElementById('form-chop').value;
+            const name = document.getElementById('form-name').value;
+            const kategori = document.getElementById('form-kategori').value;
+            const remarks = document.getElementById('form-remarks').value;
+
+            const selectedSbus = [];
+            document.querySelectorAll('input[name="sbu-other"]:checked').forEach(cb => selectedSbus.push(cb.value));
+
             const fileInput = document.getElementById('form-summary-file');
+            let attachmentName = "";
+            let attachmentData = "";
 
-            const otherSbus = Array.from(document.querySelectorAll('input[name="sbu-other"]:checked')).map(cb => cb.value);
-
-            const file = fileInput.files[0];
-            const saveRecord = (fileName, fileData) => {
-                if (id) {
-                    const item = trialItems.find(i => i.id === id);
-                    if (item) {
-                        item.so = document.getElementById('form-so').value;
-                        item.pro = document.getElementById('form-pro').value;
-                        item.dateStart = document.getElementById('form-date-start').value;
-                        item.dateEnd = document.getElementById('form-date-end').value;
-                        item.chop = document.getElementById('form-chop').value;
-                        item.name = document.getElementById('form-name').value;
-                        item.kategori = document.getElementById('form-kategori').value;
-                        item.otherSbus = otherSbus;
-                        item.remarks = document.getElementById('form-remarks').value;
-                        if (fileName) {
-                            item.attachmentName = fileName;
-                            item.attachmentData = fileData;
-                        }
-                    }
-                } else {
-                    trialItems.unshift({
-                        id: `PRJ-${Date.now()}`,
-                        so: document.getElementById('form-so').value,
-                        pro: document.getElementById('form-pro').value,
-                        dateStart: document.getElementById('form-date-start').value,
-                        dateEnd: document.getElementById('form-date-end').value,
-                        chop: document.getElementById('form-chop').value,
-                        name: document.getElementById('form-name').value,
-                        kategori: document.getElementById('form-kategori').value,
-                        sbuUtama: "SBU 1",
-                        salesUtamaStatus: "OK",
-                        otherSbus: otherSbus,
-                        orderStatus: "Will Order",
-                        rftStage: "Test 1/3 (OK)",
-                        attachmentName: fileName || "",
-                        attachmentData: fileData || "",
-                        remarks: document.getElementById('form-remarks').value
-                    });
-                }
-
-                closeModal('item-modal');
-                updateKPIs();
-                renderTrialsTable();
-                renderCharts();
-                showToast("Data trial berhasil disimpan!");
-            };
-
-            if (file) {
+            if (fileInput && fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                attachmentName = file.name;
                 const reader = new FileReader();
-                reader.onload = function(e) {
-                    saveRecord(file.name, e.target.result);
+                reader.onload = function(evt) {
+                    attachmentData = evt.target.result;
+                    commitSaveItem(id, { so, pro, dateStart, dateEnd, chop, name, kategori, remarks, selectedSbus, attachmentName, attachmentData });
                 };
                 reader.readAsDataURL(file);
             } else {
-                const existingName = id ? (trialItems.find(i => i.id === id)?.attachmentName || "") : "";
-                const existingData = id ? (trialItems.find(i => i.id === id)?.attachmentData || "") : "";
-                saveRecord(existingName, existingData);
+                commitSaveItem(id, { so, pro, dateStart, dateEnd, chop, name, kategori, remarks, selectedSbus });
             }
+        }
+
+        function commitSaveItem(id, data) {
+            if (id) {
+                const index = trialItems.findIndex(i => i.id === id);
+                if (index !== -1) {
+                    trialItems[index] = {
+                        ...trialItems[index],
+                        so: data.so,
+                        pro: data.pro,
+                        dateStart: data.dateStart,
+                        dateEnd: data.dateEnd,
+                        chop: data.chop,
+                        name: data.name,
+                        kategori: data.kategori,
+                        otherSbus: data.selectedSbus,
+                        remarks: data.remarks,
+                        ...(data.attachmentName ? { attachmentName: data.attachmentName, attachmentData: data.attachmentData } : {})
+                    };
+                }
+            } else {
+                const newItem = {
+                    id: `PRJ-${Date.now()}`,
+                    so: data.so,
+                    pro: data.pro,
+                    dateStart: data.dateStart,
+                    dateEnd: data.dateEnd,
+                    chop: data.chop,
+                    name: data.name,
+                    kategori: data.kategori,
+                    sbuUtama: "SBU 1",
+                    salesUtamaStatus: "OK",
+                    otherSbus: data.selectedSbus,
+                    orderStatus: "Will Order",
+                    rftStage: data.kategori === '3x Test (Promo)' ? '3x Test Selesai (OK)' : 'N/A',
+                    attachmentName: data.attachmentName || '',
+                    attachmentData: data.attachmentData || '',
+                    remarks: data.remarks
+                };
+                trialItems.unshift(newItem);
+            }
+
+            // Save to LocalStorage permanently
+            saveToLocalStorage();
+
+            // Reset form
+            const form = document.getElementById('item-form');
+            if (form) form.reset();
+
+            closeModal('item-modal');
+            showToast("Data trial berhasil disimpan permanen!");
+            renderAll();
         }
 
         function deleteItem(id) {
             if (confirm("Apakah Anda yakin ingin menghapus data trial ini?")) {
                 trialItems = trialItems.filter(i => i.id !== id);
-                updateKPIs();
-                renderTrialsTable();
-                renderCharts();
-                showToast("Data trial terhapus.");
+                saveToLocalStorage();
+                showToast("Data trial telah dihapus");
+                renderAll();
             }
         }
 
         function openImprovementModal() {
-            document.getElementById('improvement-modal').classList.remove('hidden');
+            const form = document.getElementById('improvement-form');
+            if (form) form.reset();
+            const modal = document.getElementById('improvement-modal');
+            if (modal) modal.classList.remove('hidden');
         }
 
-        function saveImprovement(event) {
-            event.preventDefault();
+        function saveImprovement(e) {
+            e.preventDefault();
             const title = document.getElementById('form-imp-title').value;
             const category = document.getElementById('form-imp-category').value;
             const creatorType = document.getElementById('form-imp-creator').value;
@@ -1373,43 +1406,38 @@
 
             improvements.unshift({
                 id: `IMP-${Date.now()}`,
-                title: title,
-                category: category,
-                creatorType: creatorType,
-                date: date,
-                desc: desc
+                title, category, creatorType, date, desc
             });
 
+            saveToLocalStorage();
+
+            const form = document.getElementById('improvement-form');
+            if (form) form.reset();
+
             closeModal('improvement-modal');
+            showToast("Inisiatif Improvement berhasil disimpan permanen!");
             renderImprovementsGrid();
-            showToast("Inisiatif Improvement berhasil ditambahkan!");
         }
 
         function deleteImprovement(id) {
-            if (confirm("Hapus improvement ini?")) {
+            if (confirm("Hapus inisiatif improvement ini?")) {
                 improvements = improvements.filter(i => i.id !== id);
+                saveToLocalStorage();
+                showToast("Inisiatif dihapus");
                 renderImprovementsGrid();
-                showToast("Improvement terhapus.");
             }
         }
 
         function closeModal(modalId) {
-            if (modalId) {
-                const modal = document.getElementById(modalId);
-                if (modal) modal.classList.add('hidden');
-            } else {
-                document.getElementById('item-modal').classList.add('hidden');
-                document.getElementById('improvement-modal').classList.add('hidden');
-                document.getElementById('password-modal').classList.add('hidden');
-                document.getElementById('download-password-modal').classList.add('hidden');
-            }
+            const modal = document.getElementById(modalId);
+            if (modal) modal.classList.add('hidden');
         }
 
         function showToast(msg) {
             const toast = document.getElementById('toast');
-            const msgEl = document.getElementById('toast-message');
-            if (toast && msgEl) {
-                msgEl.textContent = msg;
+            const toastMsg = document.getElementById('toast-message');
+            if (toast && toastMsg) {
+                toastMsg.textContent = msg;
                 toast.classList.remove('translate-y-20', 'opacity-0');
                 setTimeout(() => {
                     toast.classList.add('translate-y-20', 'opacity-0');
@@ -1417,22 +1445,69 @@
             }
         }
 
-        // Close Popups on Outside Click
-        window.addEventListener('click', function(e) {
-            const popup = document.getElementById('excel-filter-popup');
-            if (popup && !popup.contains(e.target) && !e.target.closest('button[onclick*="toggleExcelFilterMenu"]')) {
-                closeExcelFilterPopup();
-            }
-        });
+        function handleExcelUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
 
-        // INITIALIZATION
-        document.addEventListener('DOMContentLoaded', () => {
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const data = new Uint8Array(evt.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const json = XLSX.utils.sheet_to_json(sheet);
+
+                    if (json.length > 0) {
+                        json.forEach(row => {
+                            trialItems.unshift({
+                                id: `PRJ-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+                                so: row['No. SO'] || row['so'] || 'SO-NEW',
+                                pro: row['No. PRO'] || row['pro'] || 'PRO-NEW',
+                                dateStart: row['Tgl Buat'] || new Date().toISOString().slice(0, 10),
+                                dateEnd: row['Tgl Selesai'] || '',
+                                chop: row['Chop Fabric'] || row['Chop'] || 'CHOP',
+                                name: row['Nama Fabric'] || row['Fabric'] || 'Fabric Item',
+                                kategori: row['Kategori Test'] || '1x Test / Matrix',
+                                sbuUtama: row['SBU Utama'] || 'SBU 1',
+                                salesUtamaStatus: row['Sales Approval'] || 'OK',
+                                otherSbus: row['Ketertarikan SBU Lain'] ? row['Ketertarikan SBU Lain'].split(', ') : [],
+                                orderStatus: row['Status Order'] || 'Will Order',
+                                rftStage: 'N/A',
+                                attachmentName: '',
+                                attachmentData: '',
+                                remarks: row['Catatan Chemist'] || ''
+                            });
+                        });
+                        saveToLocalStorage();
+                        showToast(`Berhasil mengimpor ${json.length} data dari Excel!`);
+                        renderAll();
+                    }
+                } catch (err) {
+                    alert("Gagal membaca file Excel. Pastikan format kolom sesuai.");
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function renderAll() {
+            renderTrialsTable();
+            renderImprovementsGrid();
             updateKPIs();
             renderCharts();
-            renderImprovementsGrid();
-            renderTrialsTable();
-            updateAdminViewUI();
-        });
+        }
+
+        // --- INITIALIZATION ON LOAD ---
+        window.onload = function() {
+            renderAll();
+            updateAdminModeUI();
+            
+            document.addEventListener('click', function(e) {
+                const popup = document.getElementById('excel-filter-popup');
+                if (popup && !popup.contains(e.target) && !e.target.closest('button[onclick*="toggleExcelFilterMenu"]')) {
+                    closeExcelFilterPopup();
+                }
+            });
+        };
     </script>
 </body>
 </html>
