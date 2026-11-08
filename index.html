@@ -1,0 +1,1438 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Woven RND Processing Dashboard</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- SheetJS (XLSX) CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- html2pdf CDN for Direct PDF Download -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white; color: black; }
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col antialiased selection:bg-indigo-500 selection:text-white">
+
+    <!-- HEADER / NAVIGATION BAR -->
+    <header class="bg-slate-900 text-white shadow-lg sticky top-0 z-30 no-print border-b border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-wrap items-center justify-between h-auto py-3 gap-3">
+                
+                <!-- BRANDING & USER IDENTITY -->
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center font-black text-xl shadow-md border border-indigo-400/30 text-white">
+                        W
+                    </div>
+                    <div>
+                        <h1 class="text-base font-extrabold tracking-tight text-white leading-tight">WOVEN RND PROCESSING DASHBOARD</h1>
+                        <div class="flex items-center space-x-2 text-[11px] text-slate-300 mt-0.5">
+                            <span class="bg-slate-800 border border-slate-700 px-1.5 py-0.5 rounded font-medium">👤 Nisa</span>
+                            <span class="bg-slate-800 border border-slate-700 px-1.5 py-0.5 rounded font-medium">🏢 R&D Woven</span>
+                            <span class="bg-indigo-950 text-indigo-300 border border-indigo-800/60 px-1.5 py-0.5 rounded font-semibold">🧪 Chemist</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PAGE TABS SWITCHER -->
+                <div class="bg-slate-800 p-1 rounded-xl flex items-center border border-slate-700/80 shadow-inner">
+                    <button id="tab-summary-btn" onclick="switchPage('summary')" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition text-white bg-indigo-600 shadow-sm flex items-center space-x-1.5 whitespace-nowrap">
+                        <span>📌 Executive Resume</span>
+                    </button>
+                    <button id="tab-log-btn" onclick="switchPage('log')" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition text-slate-300 hover:text-white flex items-center space-x-1.5 whitespace-nowrap">
+                        <span>📋 Daily Trial Log</span>
+                    </button>
+                </div>
+
+                <!-- ACTION BUTTONS & AUTH MODE -->
+                <div class="flex items-center space-x-2">
+                    <!-- MODE INDICATOR BADGE -->
+                    <div id="current-mode-badge" class="bg-blue-950 text-blue-200 border border-blue-800 px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap">
+                        👁️ Mode Umum (Atasan)
+                    </div>
+
+                    <!-- LOGIN / MODE TOGGLE -->
+                    <button id="toggle-mode-btn" onclick="requestAdminAccess()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center space-x-1">
+                        <span>🔑 Login Nisa</span>
+                    </button>
+
+                    <!-- DOWNLOAD PDF -->
+                    <button onclick="promptDownloadPassword('pdf')" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1 shadow-sm">
+                        <span>📄 PDF</span>
+                    </button>
+
+                    <!-- DOWNLOAD EXCEL -->
+                    <button onclick="promptDownloadPassword('excel')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1 shadow-sm">
+                        <span>📊 Excel</span>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full space-y-6">
+
+        <!-- ================= PAGE 1: EXECUTIVE RESUME & SUMMARY ================= -->
+        <div id="page-summary" class="space-y-6">
+
+            <!-- FILTER DATE RANGE FOR SUMMARY -->
+            <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-4 flex flex-wrap items-center justify-between gap-4 no-print">
+                <div class="flex items-center space-x-2">
+                    <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">📅 Filter Range Tanggal:</span>
+                </div>
+                <div class="flex flex-wrap items-center gap-3">
+                    <div class="flex items-center space-x-2">
+                        <label class="text-xs font-semibold text-slate-600">Dari:</label>
+                        <input type="date" id="summary-date-from" onchange="applySummaryDateFilter()" class="bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <label class="text-xs font-semibold text-slate-600">Sampai:</label>
+                        <input type="date" id="summary-date-to" onchange="applySummaryDateFilter()" class="bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    </div>
+                    <button onclick="resetSummaryDateFilter()" class="bg-slate-200 hover:bg-slate-300 text-slate-800 px-3 py-1.5 rounded-lg text-xs font-semibold transition">
+                        Semua Data
+                    </button>
+                </div>
+            </div>
+
+            <!-- EXECUTIVE KPI CARDS (DRILL-DOWN CLICKABLE) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                
+                <!-- CARD 1: TOTAL SO/PRO -->
+                <div onclick="drillDownKPI('all')" class="bg-white rounded-xl shadow-xs border border-slate-200 p-4 cursor-pointer hover:border-indigo-400 hover:shadow-md transition group">
+                    <div class="flex justify-between items-start">
+                        <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Item / SO</span>
+                        <span class="text-xs bg-slate-100 group-hover:bg-indigo-50 text-slate-600 group-hover:text-indigo-600 p-1.5 rounded-lg font-bold">🔍 Lihat</span>
+                    </div>
+                    <div class="mt-3 flex items-baseline justify-between">
+                        <span id="kpi-total" class="text-3xl font-extrabold text-slate-900">0</span>
+                        <span class="text-[11px] text-slate-400 font-medium">All Trials</span>
+                    </div>
+                </div>
+
+                <!-- CARD 2: SALES UTAMA APPROVAL % -->
+                <div onclick="drillDownKPI('sales-ok')" class="bg-white rounded-xl shadow-xs border border-slate-200 p-4 cursor-pointer hover:border-emerald-400 hover:shadow-md transition group">
+                    <div class="flex justify-between items-start">
+                        <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Sales Utama OK</span>
+                        <span class="text-xs bg-emerald-50 text-emerald-700 p-1.5 rounded-lg font-bold">🔍 Lihat</span>
+                    </div>
+                    <div class="mt-3 flex items-baseline justify-between">
+                        <span id="kpi-sales-utama" class="text-3xl font-extrabold text-emerald-600">0%</span>
+                        <span class="text-[11px] text-emerald-700 font-medium">Approval Rate</span>
+                    </div>
+                </div>
+
+                <!-- CARD 3: ORDER STATUS CONVERSION -->
+                <div onclick="drillDownKPI('will-order')" class="bg-white rounded-xl shadow-xs border border-slate-200 p-4 cursor-pointer hover:border-indigo-400 hover:shadow-md transition group">
+                    <div class="flex justify-between items-start">
+                        <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Order Conversion</span>
+                        <span class="text-xs bg-indigo-50 text-indigo-700 p-1.5 rounded-lg font-bold">🔍 Lihat</span>
+                    </div>
+                    <div class="mt-3 flex items-baseline justify-between">
+                        <span id="kpi-order-rate" class="text-3xl font-extrabold text-indigo-600">0%</span>
+                        <span class="text-[11px] text-indigo-700 font-medium">Will Order</span>
+                    </div>
+                </div>
+
+                <!-- CARD 4: CROSS-SBU INTEREST -->
+                <div onclick="drillDownKPI('all')" class="bg-white rounded-xl shadow-xs border border-slate-200 p-4 cursor-pointer hover:border-purple-400 hover:shadow-md transition group">
+                    <div class="flex justify-between items-start">
+                        <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Ketertarikan SBU</span>
+                        <span class="text-xs bg-purple-50 text-purple-700 p-1.5 rounded-lg font-bold">🔍 Lihat</span>
+                    </div>
+                    <div class="mt-3 flex items-baseline justify-between">
+                        <span id="kpi-sbu-interest" class="text-3xl font-extrabold text-purple-600">0</span>
+                        <span class="text-[11px] text-purple-700 font-medium">SBU Total</span>
+                    </div>
+                </div>
+
+                <!-- CARD 5: 3X TEST PROMO READY -->
+                <div onclick="drillDownKPI('promo-ready')" class="bg-white rounded-xl shadow-xs border border-slate-200 p-4 cursor-pointer hover:border-amber-400 hover:shadow-md transition group">
+                    <div class="flex justify-between items-start">
+                        <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">3x Test Promo</span>
+                        <span class="text-xs bg-amber-50 text-amber-700 p-1.5 rounded-lg font-bold">🔍 Lihat</span>
+                    </div>
+                    <div class="mt-3 flex items-baseline justify-between">
+                        <span id="kpi-promo-ready" class="text-3xl font-extrabold text-amber-600">0</span>
+                        <span class="text-[11px] text-amber-700 font-medium">Promo Ready</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- VISUAL DIAGRAMS SECTION (CHART.JS) -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- DIAGRAM 1: BAR CHART APPROVAL & ORDER -->
+                <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-5 lg:col-span-2">
+                    <h3 class="text-sm font-bold text-slate-800 mb-4 flex items-center justify-between">
+                        <span>📊 Diagram Status Approval Sales & Conversion Order</span>
+                        <span class="text-[11px] text-slate-400 font-normal">Realtime Data</span>
+                    </h3>
+                    <div class="h-64">
+                        <canvas id="chart-approval-status"></canvas>
+                    </div>
+                </div>
+
+                <!-- DIAGRAM 2: DOUGHNUT CHART KATEGORI TEST -->
+                <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-5">
+                    <h3 class="text-sm font-bold text-slate-800 mb-4">
+                        🍩 Diagram Distribusi Kategori Test
+                    </h3>
+                    <div class="h-64 flex items-center justify-center">
+                        <canvas id="chart-category-doughnut"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KEY ACHIEVEMENTS & IMPROVEMENTS SECTION -->
+            <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-5 space-y-4">
+                <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900">🚀 Key Achievements & Chemist System Improvements</h3>
+                        <p class="text-xs text-slate-500 mt-0.5">Inisiatif otomatisasi, troubleshooting, dan standardisasi proses Woven oleh Chemist.</p>
+                    </div>
+                    <button onclick="openImprovementModal()" class="admin-only hidden bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition">
+                        + Tambah Improvement
+                    </button>
+                </div>
+
+                <!-- CARDS GRID -->
+                <div id="improvements-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <!-- Populated dynamically via JS -->
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ================= PAGE 2: DAILY TRIAL LOG & OPERATIONAL TABLE ================= -->
+        <div id="page-log" class="hidden space-y-4">
+
+            <!-- LOG CONTROLS & SEARCH BAR -->
+            <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-4 space-y-3 no-print">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    
+                    <div class="flex items-center space-x-2">
+                        <h3 class="text-sm font-bold text-slate-900">📋 Daily Trial & Sales Approval Log</h3>
+                        <span id="trial-count-badge" class="bg-indigo-100 text-indigo-800 text-[11px] font-bold px-2 py-0.5 rounded-full">0 Item</span>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2">
+                        <!-- GLOBAL SEARCH INPUT -->
+                        <div class="relative">
+                            <input type="text" id="global-search" oninput="renderTrialsTable()" placeholder="Cari SO, PRO, Fabric..." class="w-56 bg-slate-50 border border-slate-300 rounded-lg pl-8 pr-3 py-1.5 text-xs font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                            <span class="absolute left-2.5 top-2 text-slate-400 text-xs">🔍</span>
+                        </div>
+
+                        <!-- DATE RANGE FILTERS -->
+                        <input type="date" id="filter-date-from" onchange="renderTrialsTable()" class="bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        <span class="text-xs text-slate-400 font-bold">s/d</span>
+                        <input type="date" id="filter-date-to" onchange="renderTrialsTable()" class="bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        
+                        <button onclick="clearDateFilter()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition">
+                            Reset
+                        </button>
+
+                        <!-- UPLOAD EXCEL BUTTON (ADMIN ONLY) -->
+                        <label class="admin-only hidden bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center space-x-1 shadow-xs">
+                            <span>📥 Upload Excel</span>
+                            <input type="file" accept=".xlsx, .xls" onchange="handleExcelUpload(event)" class="hidden">
+                        </label>
+
+                        <!-- ADD TRIAL BUTTON (ADMIN ONLY) -->
+                        <button onclick="openAddTrialModal()" class="admin-only hidden bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-xs">
+                            + Input Trial Harian
+                        </button>
+                    </div>
+
+                </div>
+
+                <!-- ACTIVE COLUMN FILTERS BANNER -->
+                <div id="active-column-filters-bar" class="hidden bg-indigo-50 border border-indigo-100 rounded-lg p-2.5 flex items-center justify-between text-xs">
+                    <div class="flex items-center space-x-2">
+                        <span class="font-bold text-indigo-900">🎯 Filter Active:</span>
+                        <span id="active-filters-list-text" class="text-indigo-700 font-medium"></span>
+                    </div>
+                    <button onclick="resetAllColumnFilters()" class="text-indigo-900 hover:text-indigo-950 font-bold underline text-xs">
+                        Reset Filter Column
+                    </button>
+                </div>
+            </div>
+
+            <!-- EXCEL STYLE TABLE CONTAINER -->
+            <div class="bg-white rounded-xl shadow-xs border border-slate-200 overflow-hidden">
+                <div class="overflow-x-auto custom-scrollbar max-h-[600px]">
+                    <table class="w-full text-left border-collapse min-w-[1200px]">
+                        
+                        <!-- TABLE HEADER WITH EXCEL FILTER DROPDOWNS -->
+                        <thead class="bg-slate-900 text-white sticky top-0 z-20 text-[11px] uppercase tracking-wider font-bold select-none">
+                            <tr>
+                                <th class="px-3 py-3 border-b border-slate-800 whitespace-nowrap">
+                                    <div class="flex items-center justify-between space-x-1">
+                                        <span>No. SO</span>
+                                        <button onclick="toggleExcelFilterMenu(event, 'so')" class="hover:bg-slate-700 p-0.5 rounded text-amber-400">🔻</button>
+                                    </div>
+                                </th>
+                                <th class="px-3 py-3 border-b border-slate-800 whitespace-nowrap">
+                                    <div class="flex items-center justify-between space-x-1">
+                                        <span>No. PRO</span>
+                                        <button onclick="toggleExcelFilterMenu(event, 'pro')" class="hover:bg-slate-700 p-0.5 rounded text-amber-400">🔻</button>
+                                    </div>
+                                </th>
+                                <th class="px-3 py-3 border-b border-slate-800 whitespace-nowrap">Tgl Buat</th>
+                                <th class="px-3 py-3 border-b border-slate-800 whitespace-nowrap">Tgl Done</th>
+                                <th class="px-3 py-3 border-b border-slate-800 whitespace-nowrap">
+                                    <div class="flex items-center justify-between space-x-1">
+                                        <span>Chop</span>
+                                        <button onclick="toggleExcelFilterMenu(event, 'chop')" class="hover:bg-slate-700 p-0.5 rounded text-amber-400">🔻</button>
+                                    </div>
+                                </th>
+                                <th class="px-3 py-3 border-b border-slate-800 whitespace-nowrap">
+                                    <div class="flex items-center justify-between space-x-1">
+                                        <span>Nama Fabric</span>
+                                        <button onclick="toggleExcelFilterMenu(event, 'name')" class="hover:bg-slate-700 p-0.5 rounded text-amber-400">🔻</button>
+                                    </div>
+                                </th>
+                                <th class="px-3 py-3 border-b border-slate-800 whitespace-nowrap">
+                                    <div class="flex items-center justify-between space-x-1">
+                                        <span>Kategori Test</span>
+                                        <button onclick="toggleExcelFilterMenu(event, 'kategori')" class="hover:bg-slate-700 p-0.5 rounded text-amber-400">🔻</button>
+                                    </div>
+                                </th>
+                                <th class="px-3 py-3 border-b border-slate-800 whitespace-nowrap">
+                                    <div class="flex items-center justify-between space-x-1">
+                                        <span>Sales Utama</span>
+                                        <button onclick="toggleExcelFilterMenu(event, 'salesUtamaStatus')" class="hover:bg-slate-700 p-0.5 rounded text-amber-400">🔻</button>
+                                    </div>
+                                </th>
+                                <th class="px-3 py-3 border-b border-slate-800 whitespace-nowrap">Ketertarikan SBU Lain</th>
+                                <th class="px-3 py-3 border-b border-slate-800 whitespace-nowrap">
+                                    <div class="flex items-center justify-between space-x-1">
+                                        <span>Status Order</span>
+                                        <button onclick="toggleExcelFilterMenu(event, 'orderStatus')" class="hover:bg-slate-700 p-0.5 rounded text-amber-400">🔻</button>
+                                    </div>
+                                </th>
+                                <th class="px-3 py-3 border-b border-slate-800 whitespace-nowrap">Summary File</th>
+                                <th class="px-3 py-3 border-b border-slate-800 whitespace-nowrap text-right">Aksi</th>
+                            </tr>
+                        </thead>
+
+                        <!-- TABLE BODY -->
+                        <tbody id="trials-table-body" class="divide-y divide-slate-100 bg-white">
+                            <!-- Populated dynamically via JS -->
+                        </tbody>
+
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- EXCEL-STYLE COLUMN FILTER POP-UP MENU -->
+    <div id="excel-filter-popup" class="hidden fixed z-50 bg-slate-900 text-white rounded-xl shadow-2xl border border-slate-700 w-64 p-3 space-y-3 text-xs">
+        <div class="flex justify-between items-center border-b border-slate-700 pb-2">
+            <span id="excel-filter-column-title" class="font-bold text-slate-200">Filter Column</span>
+            <button onclick="closeExcelFilterPopup()" class="text-slate-400 hover:text-white font-bold">✕</button>
+        </div>
+
+        <!-- SORT BUTTONS -->
+        <div class="grid grid-cols-2 gap-1.5">
+            <button onclick="sortCurrentColumn('asc')" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 px-2 py-1 rounded text-[11px] font-semibold text-slate-200">
+                A ➔ Z Ascending
+            </button>
+            <button onclick="sortCurrentColumn('desc')" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 px-2 py-1 rounded text-[11px] font-semibold text-slate-200">
+                Z ➔ A Descending
+            </button>
+        </div>
+
+        <!-- SEARCH VALUE IN FILTER -->
+        <input type="text" id="excel-filter-search" oninput="filterExcelMenuCheckboxes()" placeholder="Search..." class="w-full bg-slate-800 border border-slate-700 rounded px-2.5 py-1 text-xs text-white focus:outline-none focus:border-indigo-500">
+
+        <!-- CHECKBOX LIST -->
+        <div class="space-y-1">
+            <label class="flex items-center space-x-2 text-xs font-bold text-slate-300 border-b border-slate-800 pb-1 cursor-pointer">
+                <input type="checkbox" id="excel-filter-select-all" onchange="toggleSelectAllExcelPopup(this)" checked class="rounded text-indigo-600 focus:ring-0">
+                <span>(Select All)</span>
+            </label>
+            <div id="excel-filter-checkboxes" class="max-h-36 overflow-y-auto custom-scrollbar space-y-1 pt-1">
+                <!-- Checkboxes populated dynamically -->
+            </div>
+        </div>
+
+        <!-- BUTTONS -->
+        <div class="flex items-center justify-between pt-2 border-t border-slate-800">
+            <span id="excel-filter-count-label" class="text-[10px] text-slate-400">0 items</span>
+            <div class="flex space-x-1.5">
+                <button onclick="clearFilterForActiveColumn()" class="px-2 py-1 text-[11px] font-semibold text-slate-400 hover:text-white">Clear</button>
+                <button onclick="applyExcelColumnFilter()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1 rounded text-[11px] font-bold shadow-xs">Apply</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD / EDIT ITEM TRIAL -->
+    <div id="item-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-xl w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto custom-scrollbar border border-slate-100">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 id="modal-title" class="text-base font-bold text-slate-900">Tambah Item Trial Baru</h3>
+                <button onclick="closeModal('item-modal')" class="text-slate-400 hover:text-slate-600 font-bold">✕</button>
+            </div>
+
+            <form id="item-form" onsubmit="saveItem(event)" class="space-y-4 text-xs">
+                <input type="hidden" id="form-id">
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">No. SO *</label>
+                        <input type="text" id="form-so" required placeholder="Contoh: SO-8901" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none font-medium">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">No. PRO *</label>
+                        <input type="text" id="form-pro" required placeholder="Contoh: PRO-9012" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none font-medium">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Tanggal Buat *</label>
+                        <input type="date" id="form-date-start" required class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Tanggal Selesai (Done)</label>
+                        <input type="date" id="form-date-end" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-3">
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Chop Fabric *</label>
+                        <input type="text" id="form-chop" required placeholder="WBR / HRM / BLK" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none font-medium">
+                    </div>
+                    <div class="col-span-2">
+                        <label class="block font-bold text-slate-700 mb-1">Nama Fabric *</label>
+                        <input type="text" id="form-name" required placeholder="Winburry Satin / Harumi..." class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none font-medium">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Kategori Test *</label>
+                        <select id="form-kategori" required class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                            <option value="1x Test / Matrix">1x Test / Matrix</option>
+                            <option value="SO Berbayar">SO Berbayar (Paid Trial)</option>
+                            <option value="3x Test (Promo)">3x Test (Syarat Promo)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Upload File Summary (3x Test / PDF)</label>
+                        <input type="file" id="form-summary-file" accept=".pdf, .xlsx, .xls" class="w-full text-slate-500 text-xs">
+                        <span id="existing-file-badge" class="hidden text-[10px] text-indigo-600 font-semibold block mt-1"></span>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Ketertarikan SBU Lain (Cross-SBU Interest)</label>
+                    <div class="grid grid-cols-4 gap-2 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                        <label class="flex items-center space-x-1 text-[11px] font-medium"><input type="checkbox" name="sbu-other" value="SBU 1" class="rounded text-indigo-600"> <span>SBU 1</span></label>
+                        <label class="flex items-center space-x-1 text-[11px] font-medium"><input type="checkbox" name="sbu-other" value="SBU 2" class="rounded text-indigo-600"> <span>SBU 2</span></label>
+                        <label class="flex items-center space-x-1 text-[11px] font-medium"><input type="checkbox" name="sbu-other" value="SBU 3" class="rounded text-indigo-600"> <span>SBU 3</span></label>
+                        <label class="flex items-center space-x-1 text-[11px] font-medium"><input type="checkbox" name="sbu-other" value="SBU 4" class="rounded text-indigo-600"> <span>SBU 4</span></label>
+                        <label class="flex items-center space-x-1 text-[11px] font-medium"><input type="checkbox" name="sbu-other" value="SBU 5" class="rounded text-indigo-600"> <span>SBU 5</span></label>
+                        <label class="flex items-center space-x-1 text-[11px] font-medium"><input type="checkbox" name="sbu-other" value="SBU 6" class="rounded text-indigo-600"> <span>SBU 6</span></label>
+                        <label class="flex items-center space-x-1 text-[11px] font-medium"><input type="checkbox" name="sbu-other" value="SBU 7" class="rounded text-indigo-600"> <span>SBU 7</span></label>
+                        <label class="flex items-center space-x-1 text-[11px] font-medium"><input type="checkbox" name="sbu-other" value="SBU 8" class="rounded text-indigo-600"> <span>SBU 8</span></label>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Catatan Chemist / Process Findings</label>
+                    <textarea id="form-remarks" rows="2" placeholder="Catatan setting stenter, crease check, lab dip..." class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none"></textarea>
+                </div>
+
+                <div class="flex justify-end space-x-2 pt-2 border-t border-slate-100">
+                    <button type="button" onclick="closeModal('item-modal')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg transition">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg transition shadow-sm">Simpan Data</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD IMPROVEMENT -->
+    <div id="improvement-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4 border border-slate-100">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 class="text-base font-bold text-slate-900">Tambah Inisiatif Improvement</h3>
+                <button onclick="closeModal('improvement-modal')" class="text-slate-400 hover:text-slate-600 font-bold">✕</button>
+            </div>
+
+            <form onsubmit="saveImprovement(event)" class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Judul Inisiatif / Project *</label>
+                    <input type="text" id="form-imp-title" required placeholder="Contoh: Auto-Print Dyeslip" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none font-medium">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Kategori *</label>
+                        <input type="text" id="form-imp-category" required placeholder="Contoh: SYSTEM AUTOMATION" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none font-medium">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Pembuat Inisiatif *</label>
+                        <input type="text" id="form-imp-creator" required placeholder="Contoh: Individual (Nisa) / Team" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none font-medium">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Tanggal *</label>
+                    <input type="date" id="form-imp-date" required class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                </div>
+
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Deskripsi & Impact *</label>
+                    <textarea id="form-imp-desc" rows="3" required placeholder="Jelaskan masalah dan efisiensi yang didapat..." class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none"></textarea>
+                </div>
+
+                <div class="flex justify-end space-x-2 pt-2 border-t border-slate-100">
+                    <button type="button" onclick="closeModal('improvement-modal')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg transition">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg transition shadow-sm">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: LOGIN ADMIN -->
+    <div id="password-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 space-y-4 border border-slate-100">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+                <h3 class="text-base font-bold text-slate-900">🔑 Login Admin (Mode Nisa)</h3>
+                <button onclick="closeModal('password-modal')" class="text-slate-400 hover:text-slate-600 font-bold">✕</button>
+            </div>
+            <div class="space-y-3">
+                <p class="text-xs text-slate-600">Masukkan Password untuk mengakses Mode Edit Data & Tambah Improvement:</p>
+                <input type="password" id="admin-pass-input" placeholder="Masukkan Password" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none font-bold">
+            </div>
+            <div class="flex justify-end space-x-2 pt-2">
+                <button onclick="closeModal('password-modal')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg text-xs">Batal</button>
+                <button onclick="verifyAdminPassword()" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-xs shadow-sm">Login & Edit</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: PRIVACY DOWNLOAD PASSWORD -->
+    <div id="download-password-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 space-y-4 border border-slate-100">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+                <h3 class="text-base font-bold text-slate-900">🔒 Privacy Download Password</h3>
+                <button onclick="closeModal('download-password-modal')" class="text-slate-400 hover:text-slate-600 font-bold">✕</button>
+            </div>
+            <div class="space-y-3">
+                <p class="text-xs text-slate-600">Masukkan Password Privacy untuk mengunduh laporan / file lampiran:</p>
+                <input type="password" id="download-pass-input" placeholder="Masukkan Password Privacy" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none font-bold">
+            </div>
+            <div class="flex justify-end space-x-2 pt-2">
+                <button onclick="closeModal('download-password-modal')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg text-xs">Batal</button>
+                <button onclick="verifyDownloadPassword()" class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs shadow-sm">Verifikasi & Download</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl border border-slate-800 flex items-center space-x-2 text-xs font-semibold">
+        <span>✅</span>
+        <span id="toast-message">Notifikasi</span>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // DATA INITIALIZATION
+        let trialItems = [
+            {
+                id: "PRJ-001",
+                so: "SO-8801",
+                pro: "PRO-9001",
+                dateStart: "2026-10-02",
+                dateEnd: "2026-10-05",
+                chop: "WBR",
+                name: "Winburry Satin",
+                kategori: "1x Test / Matrix",
+                sbuUtama: "SBU 1",
+                salesUtamaStatus: "OK",
+                otherSbus: ["SBU 2", "SBU 4"],
+                orderStatus: "Will Order",
+                rftStage: "N/A",
+                attachmentName: "Summary_Winburry_Batch1.pdf",
+                attachmentData: "data:application/pdf;base64,JVBERi0xLjQK%",
+                remarks: "Problem crease teridentifikasi di pre-stenter karena over-qty, bukan sambungan tali."
+            },
+            {
+                id: "PRJ-002",
+                so: "SO-8802",
+                pro: "PRO-9002",
+                dateStart: "2026-10-10",
+                dateEnd: "2026-10-14",
+                chop: "HRM",
+                name: "Harumi Formal Black",
+                kategori: "SO Berbayar",
+                sbuUtama: "SBU 2",
+                salesUtamaStatus: "OK",
+                otherSbus: ["SBU 3"],
+                orderStatus: "Will Order",
+                rftStage: "N/A",
+                attachmentName: "",
+                attachmentData: "",
+                remarks: "Tembak lab & komparasi gradasi hitam (bluish & reddish) approved."
+            },
+            {
+                id: "PRJ-003",
+                so: "SO-8803",
+                pro: "PRO-9003",
+                dateStart: "2026-10-25",
+                dateEnd: "2026-11-04",
+                chop: "WBR",
+                name: "Winburry Satin Promo",
+                kategori: "3x Test (Promo)",
+                sbuUtama: "SBU 1",
+                salesUtamaStatus: "OK",
+                otherSbus: ["SBU 1", "SBU 5"],
+                orderStatus: "Will Order",
+                rftStage: "3x Test Selesai (OK)",
+                attachmentName: "Summary_3xTest_Winburry.pdf",
+                attachmentData: "data:application/pdf;base64,JVBERi0xLjQK%",
+                remarks: "Stabilitas setting 3x test konsisten, siap rilis promo massal."
+            }
+        ];
+
+        let improvements = [
+            {
+                id: "IMP-01",
+                title: "Winburry Satin Crease Root-Cause",
+                category: "TROUBLESHOOTING",
+                creatorType: "Individual (Nisa)",
+                date: "2026-10-03",
+                desc: "Identifikasi masalah crease di mesin stenter bukan karena tali sambungan, melainkan berlebihnya Qty kain sebelum masuk mesin stenter."
+            },
+            {
+                id: "IMP-02",
+                title: "Harumi Formal Black Standardization",
+                category: "LAB & COLOR MATCHING",
+                creatorType: "Individual (Nisa)",
+                date: "2026-10-12",
+                desc: "Pembuatan format report test untuk tembak lab dan komparasi gradasi hitam (bluish & reddish)."
+            },
+            {
+                id: "IMP-03",
+                title: "Master Scheduling Dropdown Status",
+                category: "SYSTEM AUTOMATION",
+                creatorType: "Team Creation",
+                date: "2026-10-16",
+                desc: "Pengembangan format scheduling berbasis dropdown/copast untuk mempercepat update status tanpa ngetik manual."
+            },
+            {
+                id: "IMP-04",
+                title: "Automated Dyeslip Printing",
+                category: "LEAD-TIME REDUCTION",
+                creatorType: "Team Creation",
+                date: "2026-10-20",
+                desc: "Format print dyeslip otomatis untuk mengeliminasi waktu tunggu penimbangan dari gudang obat."
+            }
+        ];
+
+        let isAdminMode = false;
+        const ADMIN_PASSWORD_DEFAULT = "1234";
+        const DOWNLOAD_PASSWORD_DEFAULT = "genz";
+
+        let pendingExportType = null;
+        let pendingDownloadItemId = null;
+
+        let columnFilters = {};
+        let activeFilterColKey = null;
+        let currentSortColumnKey = null;
+        let currentSortDirection = 'asc';
+
+        let chartApprovalStatus = null;
+        let chartCategoryDoughnut = null;
+
+        // --- PASSWORD PROTECTED DOWNLOAD ACTIONS ---
+        function promptDownloadPassword(type, itemId = null) {
+            pendingExportType = type;
+            pendingDownloadItemId = itemId;
+            const input = document.getElementById('download-pass-input');
+            if (input) input.value = '';
+            const modal = document.getElementById('download-password-modal');
+            if (modal) modal.classList.remove('hidden');
+        }
+
+        function verifyDownloadPassword() {
+            const input = document.getElementById('download-pass-input');
+            const pass = input ? input.value : '';
+            if (pass === DOWNLOAD_PASSWORD_DEFAULT) {
+                closeModal('download-password-modal');
+                showToast("Password Benar! Memproses Download...");
+
+                if (pendingExportType === 'excel') {
+                    executeExcelExport();
+                } else if (pendingExportType === 'pdf') {
+                    executePDFExport();
+                } else if (pendingExportType === 'attachment' && pendingDownloadItemId) {
+                    executeAttachmentDownload(pendingDownloadItemId);
+                }
+            } else {
+                alert("Password salah! Masukkan password 'genz' untuk melanjutkan.");
+            }
+        }
+
+        function executeExcelExport() {
+            const ws = XLSX.utils.json_to_sheet(trialItems.map(i => ({
+                "No. SO": i.so,
+                "No. PRO": i.pro,
+                "Tgl Buat": i.dateStart,
+                "Tgl Selesai": i.dateEnd,
+                "Chop Fabric": i.chop,
+                "Nama Fabric": i.name,
+                "Kategori Test": i.kategori,
+                "SBU Utama": i.sbuUtama,
+                "Sales Approval": i.salesUtamaStatus,
+                "Ketertarikan SBU Lain": (i.otherSbus || []).join(', '),
+                "Status Order": i.orderStatus,
+                "Syarat 3x Test Promo": i.rftStage,
+                "File Summary": i.attachmentName || "Tidak Ada",
+                "Catatan Chemist": i.remarks
+            })));
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Woven Trial Report");
+            XLSX.writeFile(wb, `Woven_RND_Processing_Report_${new Date().toISOString().slice(0,10)}.xlsx`);
+        }
+
+        function executePDFExport() {
+            showToast("Menyiapkan file PDF...");
+            
+            // Temporary hide header & controls for clean PDF output
+            const element = document.querySelector('main');
+            const opt = {
+                margin:       [0.3, 0.3, 0.3, 0.3],
+                filename:     `Woven_RND_Processing_Report_${new Date().toISOString().slice(0,10)}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true, logging: false },
+                jsPDF:        { unit: 'in', format: 'a4', orientation: 'landscape' }
+            };
+
+            // Generate PDF file download directly
+            html2pdf().set(opt).from(element).save().then(() => {
+                showToast("File PDF berhasil diunduh!");
+            }).catch(err => {
+                console.error("PDF Export error:", err);
+                window.print(); // Fallback to print if library is restricted
+            });
+        }
+
+        function executeAttachmentDownload(itemId) {
+            const item = trialItems.find(i => i.id === itemId);
+            if (!item || !item.attachmentData) {
+                alert("File lampiran tidak ditemukan!");
+                return;
+            }
+            const a = document.createElement('a');
+            a.href = item.attachmentData;
+            a.download = item.attachmentName || `Summary_Test_${item.so}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        // --- PAGE SWITCHING (SUMMARY vs LOG) ---
+        function switchPage(page) {
+            const summaryPage = document.getElementById('page-summary');
+            const logPage = document.getElementById('page-log');
+            const btnSummary = document.getElementById('tab-summary-btn');
+            const btnLog = document.getElementById('tab-log-btn');
+
+            if (page === 'summary') {
+                summaryPage.classList.remove('hidden');
+                logPage.classList.add('hidden');
+                btnSummary.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition text-white bg-indigo-600 shadow-sm flex items-center space-x-1.5 whitespace-nowrap";
+                btnLog.className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition text-slate-300 hover:text-white flex items-center space-x-1.5 whitespace-nowrap";
+                updateKPIs();
+                renderCharts();
+            } else {
+                summaryPage.classList.add('hidden');
+                logPage.classList.remove('hidden');
+                btnSummary.className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition text-slate-300 hover:text-white flex items-center space-x-1.5 whitespace-nowrap";
+                btnLog.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition text-white bg-indigo-600 shadow-sm flex items-center space-x-1.5 whitespace-nowrap";
+                renderTrialsTable();
+            }
+        }
+
+        // --- TABLE RENDERING & FILTERING ---
+        function renderTrialsTable() {
+            const tbody = document.getElementById('trials-table-body');
+            if (!tbody) return;
+
+            const globalSearch = (document.getElementById('global-search')?.value || '').toLowerCase();
+            const dateFrom = document.getElementById('filter-date-from')?.value || '';
+            const dateTo = document.getElementById('filter-date-to')?.value || '';
+
+            let filtered = trialItems.filter(item => {
+                if (dateFrom && item.dateStart < dateFrom) return false;
+                if (dateTo && item.dateStart > dateTo) return false;
+
+                if (globalSearch) {
+                    const haystack = `${item.so} ${item.pro} ${item.chop} ${item.name} ${item.kategori} ${item.remarks}`.toLowerCase();
+                    if (!haystack.includes(globalSearch)) return false;
+                }
+
+                for (let key in columnFilters) {
+                    const allowedVals = columnFilters[key];
+                    if (allowedVals && allowedVals.length > 0) {
+                        const itemVal = item[key] || '(Kosong)';
+                        if (!allowedVals.includes(itemVal)) return false;
+                    }
+                }
+                return true;
+            });
+
+            if (currentSortColumnKey) {
+                filtered.sort((a, b) => {
+                    const valA = (a[currentSortColumnKey] || '').toString().toLowerCase();
+                    const valB = (b[currentSortColumnKey] || '').toString().toLowerCase();
+                    if (valA < valB) return currentSortDirection === 'asc' ? -1 : 1;
+                    if (valA > valB) return currentSortDirection === 'asc' ? 1 : -1;
+                    return 0;
+                });
+            }
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="12" class="px-4 py-8 text-center text-slate-400">Tidak ada data trial yang sesuai filter.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(item => {
+                const sbuLainTags = (item.otherSbus || []).map(s => `<span class="bg-indigo-50 text-indigo-700 text-[9px] font-bold px-1.5 py-0.5 rounded border border-indigo-100">${s}</span>`).join(' ') || '<span class="text-slate-400 text-[10px]">-</span>';
+                
+                let attachmentBadge = `<span class="text-slate-400 text-[10px]">Belum Ada</span>`;
+                if (item.attachmentName) {
+                    attachmentBadge = `<button onclick="promptDownloadPassword('attachment', '${item.id}')" class="inline-flex items-center space-x-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 px-2 py-0.5 rounded text-[10px] font-bold transition">
+                        <span>📄 Download Summary 🔒</span>
+                    </button>`;
+                }
+
+                const actionButtons = isAdminMode ? `
+                    <div class="flex items-center space-x-2 justify-end">
+                        <button onclick="openEditModal('${item.id}')" class="text-indigo-600 hover:text-indigo-900 font-bold text-[11px]">Edit</button>
+                        <button onclick="deleteItem('${item.id}')" class="text-red-500 hover:text-red-700 font-bold text-[11px]">Hapus</button>
+                    </div>
+                ` : `<span class="text-slate-400 text-[10px]">View Only</span>`;
+
+                return `
+                    <tr class="hover:bg-slate-50/80 transition border-b border-slate-100 text-xs">
+                        <td class="px-3 py-2.5 font-bold text-slate-900 whitespace-nowrap">${item.so}</td>
+                        <td class="px-3 py-2.5 font-semibold text-slate-700 whitespace-nowrap">${item.pro}</td>
+                        <td class="px-3 py-2.5 text-slate-500 whitespace-nowrap">${item.dateStart || '-'}</td>
+                        <td class="px-3 py-2.5 text-slate-500 whitespace-nowrap">${item.dateEnd || '-'}</td>
+                        <td class="px-3 py-2.5"><span class="bg-slate-100 text-slate-800 px-1.5 py-0.5 rounded font-bold text-[10px]">${item.chop}</span></td>
+                        <td class="px-3 py-2.5 font-bold text-slate-800">${item.name}</td>
+                        <td class="px-3 py-2.5"><span class="bg-indigo-50 text-indigo-700 font-bold px-2 py-0.5 rounded text-[10px] border border-indigo-100 whitespace-nowrap">${item.kategori}</span></td>
+                        <td class="px-3 py-2.5">${getSalesBadge(item.salesUtamaStatus)}</td>
+                        <td class="px-3 py-2.5">${sbuLainTags}</td>
+                        <td class="px-3 py-2.5">${getOrderBadge(item.orderStatus)}</td>
+                        <td class="px-3 py-2.5">${attachmentBadge}</td>
+                        <td class="px-3 py-2.5 text-right">${actionButtons}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // --- DRILL DOWN FROM KPI TO DAILY LOG ---
+        function drillDownKPI(type) {
+            switchPage('log');
+            resetAllColumnFilters();
+            
+            if (type === 'sales-ok') {
+                columnFilters['salesUtamaStatus'] = ['OK'];
+            } else if (type === 'will-order') {
+                columnFilters['orderStatus'] = ['Will Order'];
+            } else if (type === 'promo-ready') {
+                columnFilters['kategori'] = ['3x Test (Promo)'];
+            }
+            
+            updateActiveColumnFiltersUI();
+            renderTrialsTable();
+        }
+
+        // --- HELPER BADGES ---
+        function getSalesBadge(status) {
+            if (status === 'OK') return `<span class="bg-emerald-100 text-emerald-800 border border-emerald-200 font-bold px-2 py-0.5 rounded text-[10px]">OK</span>`;
+            if (status === 'REJECT') return `<span class="bg-red-100 text-red-800 border border-red-200 font-bold px-2 py-0.5 rounded text-[10px]">REJECT</span>`;
+            return `<span class="bg-amber-100 text-amber-800 border border-amber-200 font-bold px-2 py-0.5 rounded text-[10px]">PENDING</span>`;
+        }
+
+        function getOrderBadge(status) {
+            if (status === 'Will Order') return `<span class="bg-indigo-100 text-indigo-800 font-bold px-2 py-0.5 rounded text-[10px]">Will Order</span>`;
+            if (status === 'No Order') return `<span class="bg-slate-100 text-slate-700 font-bold px-2 py-0.5 rounded text-[10px]">No Order</span>`;
+            return `<span class="bg-amber-50 text-amber-700 font-bold px-2 py-0.5 rounded text-[10px]">Pending</span>`;
+        }
+
+        // --- AUTHENTICATION & ACCESS ---
+        function requestAdminAccess() {
+            if (isAdminMode) {
+                isAdminMode = false;
+                updateAdminViewUI();
+                showToast("Berhasil logout dari Mode Admin.");
+            } else {
+                const modal = document.getElementById('password-modal');
+                const input = document.getElementById('admin-pass-input');
+                if (input) input.value = '';
+                if (modal) modal.classList.remove('hidden');
+            }
+        }
+
+        function verifyAdminPassword() {
+            const input = document.getElementById('admin-pass-input');
+            const pass = input ? input.value : '';
+            if (pass === ADMIN_PASSWORD_DEFAULT) {
+                isAdminMode = true;
+                updateAdminViewUI();
+                closeModal('password-modal');
+                showToast("Login Berhasil! Mode Edit Aktif.");
+            } else {
+                alert("Password Admin salah!");
+            }
+        }
+
+        function updateAdminViewUI() {
+            const badge = document.getElementById('current-mode-badge');
+            const btn = document.getElementById('toggle-mode-btn');
+            const adminEls = document.querySelectorAll('.admin-only');
+
+            if (isAdminMode) {
+                if (badge) {
+                    badge.textContent = "✏️ Mode Nisa (Admin)";
+                    badge.className = "bg-emerald-950 text-emerald-200 border border-emerald-800 px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap";
+                }
+                if (btn) btn.innerHTML = `<span>🔒 Logout Nisa</span>`;
+                adminEls.forEach(el => el.classList.remove('hidden'));
+            } else {
+                if (badge) {
+                    badge.textContent = "👁️ Mode Umum";
+                    badge.className = "bg-blue-950 text-blue-200 border border-blue-800 px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap";
+                }
+                if (btn) btn.innerHTML = `<span>🔑 Login Nisa</span>`;
+                adminEls.forEach(el => el.classList.add('hidden'));
+            }
+            renderTrialsTable();
+            renderImprovementsGrid();
+        }
+
+        // --- EXCEL-STYLE COLUMN FILTERS ---
+        function toggleExcelFilterMenu(event, colKey) {
+            event.stopPropagation();
+            activeFilterColKey = colKey;
+
+            const popup = document.getElementById('excel-filter-popup');
+            if (!popup) return;
+
+            const buttonRect = event.currentTarget.getBoundingClientRect();
+            popup.style.top = `${buttonRect.bottom + window.scrollY + 4}px`;
+            popup.style.left = `${Math.min(buttonRect.left, window.innerWidth - 300)}px`;
+
+            const titleEl = document.getElementById('excel-filter-column-title');
+            if (titleEl) titleEl.textContent = `Filter: ${colKey.toUpperCase()}`;
+
+            const searchInput = document.getElementById('excel-filter-search');
+            if (searchInput) searchInput.value = '';
+
+            populateExcelFilterCheckboxes(colKey);
+            popup.classList.remove('hidden');
+        }
+
+        function populateExcelFilterCheckboxes(colKey) {
+            const container = document.getElementById('excel-filter-checkboxes');
+            if (!container) return;
+
+            const uniqueValues = Array.from(new Set(trialItems.map(item => item[colKey] || '(Kosong)'))).sort();
+            const activeAllowed = columnFilters[colKey] || uniqueValues;
+
+            container.innerHTML = uniqueValues.map(val => `
+                <label class="flex items-center space-x-2 text-[11px] text-slate-300 hover:text-white cursor-pointer py-0.5">
+                    <input type="checkbox" value="${val}" ${activeAllowed.includes(val) ? 'checked' : ''} class="excel-pop-cb rounded text-indigo-600 focus:ring-0">
+                    <span class="truncate">${val}</span>
+                </label>
+            `).join('');
+
+            const selectAllCb = document.getElementById('excel-filter-select-all');
+            if (selectAllCb) selectAllCb.checked = activeAllowed.length === uniqueValues.length;
+
+            const countLabel = document.getElementById('excel-filter-count-label');
+            if (countLabel) countLabel.textContent = `${uniqueValues.length} items`;
+        }
+
+        function filterExcelMenuCheckboxes() {
+            const query = (document.getElementById('excel-filter-search')?.value || '').toLowerCase();
+            const labels = document.querySelectorAll('#excel-filter-checkboxes label');
+            labels.forEach(lbl => {
+                const text = lbl.textContent.toLowerCase();
+                lbl.style.display = text.includes(query) ? 'flex' : 'none';
+            });
+        }
+
+        function toggleSelectAllExcelPopup(selectAllCb) {
+            const cbs = document.querySelectorAll('.excel-pop-cb');
+            cbs.forEach(cb => {
+                if (cb.closest('label').style.display !== 'none') {
+                    cb.checked = selectAllCb.checked;
+                }
+            });
+        }
+
+        function applyExcelColumnFilter() {
+            if (!activeFilterColKey) return;
+            const checkedVals = Array.from(document.querySelectorAll('.excel-pop-cb:checked')).map(cb => cb.value);
+            columnFilters[activeFilterColKey] = checkedVals;
+
+            closeExcelFilterPopup();
+            updateActiveColumnFiltersUI();
+            renderTrialsTable();
+            updateKPIs();
+        }
+
+        function clearFilterForActiveColumn() {
+            if (activeFilterColKey && columnFilters[activeFilterColKey]) {
+                delete columnFilters[activeFilterColKey];
+            }
+            closeExcelFilterPopup();
+            updateActiveColumnFiltersUI();
+            renderTrialsTable();
+            updateKPIs();
+        }
+
+        function resetAllColumnFilters() {
+            columnFilters = {};
+            closeExcelFilterPopup();
+            updateActiveColumnFiltersUI();
+            renderTrialsTable();
+            updateKPIs();
+        }
+
+        function updateActiveColumnFiltersUI() {
+            const bar = document.getElementById('active-column-filters-bar');
+            const listText = document.getElementById('active-filters-list-text');
+            if (!bar || !listText) return;
+
+            const keys = Object.keys(columnFilters);
+            if (keys.length === 0) {
+                bar.classList.add('hidden');
+            } else {
+                bar.classList.remove('hidden');
+                listText.textContent = keys.map(k => `${k.toUpperCase()} (${columnFilters[k].length} pilihan)`).join(' | ');
+            }
+        }
+
+        function closeExcelFilterPopup() {
+            const popup = document.getElementById('excel-filter-popup');
+            if (popup) popup.classList.add('hidden');
+        }
+
+        function sortCurrentColumn(direction) {
+            if (activeFilterColKey) {
+                currentSortColumnKey = activeFilterColKey;
+                currentSortDirection = direction;
+                renderTrialsTable();
+            }
+            closeExcelFilterPopup();
+        }
+
+        // --- SUMMARY DATE FILTERS & KPIS ---
+        function getFilteredTrialsForSummary() {
+            const dateFrom = document.getElementById('summary-date-from')?.value || '';
+            const dateTo = document.getElementById('summary-date-to')?.value || '';
+
+            return trialItems.filter(item => {
+                if (dateFrom && item.dateStart < dateFrom) return false;
+                if (dateTo && item.dateStart > dateTo) return false;
+                return true;
+            });
+        }
+
+        function applySummaryDateFilter() {
+            updateKPIs();
+            renderCharts();
+        }
+
+        function resetSummaryDateFilter() {
+            const dateFromInput = document.getElementById('summary-date-from');
+            const dateToInput = document.getElementById('summary-date-to');
+            if (dateFromInput) dateFromInput.value = '';
+            if (dateToInput) dateToInput.value = '';
+            updateKPIs();
+            renderCharts();
+        }
+
+        function clearDateFilter() {
+            const dateFromInput = document.getElementById('filter-date-from');
+            const dateToInput = document.getElementById('filter-date-to');
+            if (dateFromInput) dateFromInput.value = '';
+            if (dateToInput) dateToInput.value = '';
+            renderTrialsTable();
+        }
+
+        function updateKPIs() {
+            const items = getFilteredTrialsForSummary();
+            const total = items.length;
+
+            const salesOkCount = items.filter(i => i.salesUtamaStatus === 'OK').length;
+            const willOrderCount = items.filter(i => i.orderStatus === 'Will Order').length;
+
+            let sbuCount = 0;
+            items.forEach(i => { if (i.otherSbus) sbuCount += i.otherSbus.length; });
+
+            const promoReadyCount = items.filter(i => i.kategori === '3x Test (Promo)' && i.salesUtamaStatus === 'OK').length;
+
+            document.getElementById('kpi-total').textContent = total;
+            document.getElementById('kpi-sales-utama').textContent = total > 0 ? `${Math.round((salesOkCount / total) * 100)}%` : '0%';
+            document.getElementById('kpi-order-rate').textContent = total > 0 ? `${Math.round((willOrderCount / total) * 100)}%` : '0%';
+            document.getElementById('kpi-sbu-interest').textContent = sbuCount;
+            document.getElementById('kpi-promo-ready').textContent = promoReadyCount;
+
+            const badge = document.getElementById('trial-count-badge');
+            if (badge) badge.textContent = `${trialItems.length} SO/PRO`;
+        }
+
+        // --- DIAGRAM / CHART.JS RENDERING ---
+        function renderCharts() {
+            const items = getFilteredTrialsForSummary();
+
+            const salesOkCount = items.filter(i => i.salesUtamaStatus === 'OK').length;
+            const willOrderCount = items.filter(i => i.orderStatus === 'Will Order').length;
+            const promoReadyCount = items.filter(i => i.kategori === '3x Test (Promo)' && i.salesUtamaStatus === 'OK').length;
+
+            // Chart 1: Bar Chart
+            const ctx1 = document.getElementById('chart-approval-status')?.getContext('2d');
+            if (ctx1) {
+                if (chartApprovalStatus) chartApprovalStatus.destroy();
+                chartApprovalStatus = new Chart(ctx1, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Total Trial', 'Sales Utama OK', 'Will Order', '3x Promo Ready'],
+                        datasets: [{
+                            label: 'Jumlah Item Kain',
+                            data: [items.length, salesOkCount, willOrderCount, promoReadyCount],
+                            backgroundColor: ['#3b82f6', '#10b981', '#6366f1', '#f59e0b'],
+                            borderRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+                    }
+                });
+            }
+
+            // Chart 2: Doughnut Chart
+            const ctx2 = document.getElementById('chart-category-doughnut')?.getContext('2d');
+            if (ctx2) {
+                const count1x = items.filter(i => i.kategori === '1x Test / Matrix').length;
+                const countPaid = items.filter(i => i.kategori === 'SO Berbayar').length;
+                const count3x = items.filter(i => i.kategori === '3x Test (Promo)').length;
+
+                if (chartCategoryDoughnut) chartCategoryDoughnut.destroy();
+                chartCategoryDoughnut = new Chart(ctx2, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['1x Test / Matrix', 'SO Berbayar', '3x Test Promo'],
+                        datasets: [{
+                            data: [count1x, countPaid, count3x],
+                            backgroundColor: ['#6366f1', '#f59e0b', '#10b981']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } }
+                    }
+                });
+            }
+        }
+
+        // --- SYSTEM IMPROVEMENTS GRID ---
+        function renderImprovementsGrid() {
+            const grid = document.getElementById('improvements-grid');
+            if (!grid) return;
+
+            grid.innerHTML = improvements.map(imp => `
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col justify-between space-y-3 relative hover:shadow-md transition">
+                    <div>
+                        <div class="flex justify-between items-start gap-1 mb-1.5">
+                            <span class="text-[10px] font-bold tracking-wider text-indigo-700 uppercase bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">${imp.category}</span>
+                            <span class="text-[10px] text-slate-400 font-medium">${imp.date || ''}</span>
+                        </div>
+                        <h4 class="font-bold text-slate-900 text-sm leading-tight">${imp.title}</h4>
+                        <p class="text-xs text-slate-600 mt-2 leading-relaxed">${imp.desc}</p>
+                    </div>
+                    <div class="pt-2 border-t border-slate-200 flex justify-between items-center text-[11px]">
+                        <span class="font-semibold ${imp.creatorType.includes('Nisa') ? 'text-indigo-600' : 'text-emerald-600'} bg-white px-2 py-0.5 rounded border border-slate-200 shadow-2xs">${imp.creatorType}</span>
+                        ${isAdminMode ? `<button onclick="deleteImprovement('${imp.id}')" class="text-red-500 hover:text-red-700 text-xs font-semibold">Hapus</button>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // --- EXCEL UPLOAD HANDLER ---
+        function handleExcelUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+
+                    if (jsonData.length === 0) {
+                        alert("File Excel kosong!");
+                        return;
+                    }
+
+                    jsonData.forEach((row, idx) => {
+                        trialItems.unshift({
+                            id: `PRJ-XL-${Date.now()}-${idx}`,
+                            so: row["No. SO"] || row["SO"] || `SO-XL-${idx}`,
+                            pro: row["No. PRO"] || row["PRO"] || `PRO-XL-${idx}`,
+                            dateStart: row["Tgl Buat"] || new Date().toISOString().slice(0,10),
+                            dateEnd: row["Tgl Selesai"] || "",
+                            chop: row["Chop Fabric"] || row["Chop"] || "WBR",
+                            name: row["Nama Fabric"] || row["Fabric"] || "Fabric Import",
+                            kategori: row["Kategori Test"] || "1x Test / Matrix",
+                            sbuUtama: row["SBU Utama"] || "SBU 1",
+                            salesUtamaStatus: row["Sales Approval"] || "OK",
+                            otherSbus: row["Ketertarikan SBU Lain"] ? row["Ketertarikan SBU Lain"].split(', ') : [],
+                            orderStatus: row["Status Order"] || "Will Order",
+                            rftStage: row["Syarat 3x Test Promo"] || "Test 1/3 (OK)",
+                            attachmentName: "",
+                            attachmentData: "",
+                            remarks: row["Catatan Chemist"] || "Imported from Excel"
+                        });
+                    });
+
+                    updateKPIs();
+                    renderTrialsTable();
+                    renderCharts();
+                    showToast(`Berhasil mengimpor ${jsonData.length} data trial dari Excel!`);
+                } catch (err) {
+                    alert("Gagal membaca file Excel. Pastikan format file sesuai.");
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // --- MODAL UTILITIES & CRUD ---
+        function openAddTrialModal() {
+            document.getElementById('modal-title').textContent = "Tambah Item Trial Baru";
+            document.getElementById('item-form').reset();
+            document.getElementById('form-id').value = "";
+            document.getElementById('existing-file-badge').classList.add('hidden');
+            document.getElementById('item-modal').classList.remove('hidden');
+        }
+
+        function openEditModal(id) {
+            const item = trialItems.find(i => i.id === id);
+            if (!item) return;
+
+            document.getElementById('modal-title').textContent = "Edit Data Item Trial";
+            document.getElementById('form-id').value = item.id;
+            document.getElementById('form-so').value = item.so;
+            document.getElementById('form-pro').value = item.pro;
+            document.getElementById('form-date-start').value = item.dateStart || '';
+            document.getElementById('form-date-end').value = item.dateEnd || '';
+            document.getElementById('form-chop').value = item.chop || '';
+            document.getElementById('form-name').value = item.name;
+            document.getElementById('form-kategori').value = item.kategori;
+            document.getElementById('form-remarks').value = item.remarks || '';
+
+            const fileBadge = document.getElementById('existing-file-badge');
+            if (item.attachmentName) {
+                fileBadge.textContent = `📎 File Terlampir Saat Ini: ${item.attachmentName}`;
+                fileBadge.classList.remove('hidden');
+            } else {
+                fileBadge.classList.add('hidden');
+            }
+
+            document.querySelectorAll('input[name="sbu-other"]').forEach(cb => {
+                cb.checked = item.otherSbus && item.otherSbus.includes(cb.value);
+            });
+
+            document.getElementById('item-modal').classList.remove('hidden');
+        }
+
+        function saveItem(event) {
+            event.preventDefault();
+            const id = document.getElementById('form-id').value;
+            const fileInput = document.getElementById('form-summary-file');
+
+            const otherSbus = Array.from(document.querySelectorAll('input[name="sbu-other"]:checked')).map(cb => cb.value);
+
+            const file = fileInput.files[0];
+            const saveRecord = (fileName, fileData) => {
+                if (id) {
+                    const item = trialItems.find(i => i.id === id);
+                    if (item) {
+                        item.so = document.getElementById('form-so').value;
+                        item.pro = document.getElementById('form-pro').value;
+                        item.dateStart = document.getElementById('form-date-start').value;
+                        item.dateEnd = document.getElementById('form-date-end').value;
+                        item.chop = document.getElementById('form-chop').value;
+                        item.name = document.getElementById('form-name').value;
+                        item.kategori = document.getElementById('form-kategori').value;
+                        item.otherSbus = otherSbus;
+                        item.remarks = document.getElementById('form-remarks').value;
+                        if (fileName) {
+                            item.attachmentName = fileName;
+                            item.attachmentData = fileData;
+                        }
+                    }
+                } else {
+                    trialItems.unshift({
+                        id: `PRJ-${Date.now()}`,
+                        so: document.getElementById('form-so').value,
+                        pro: document.getElementById('form-pro').value,
+                        dateStart: document.getElementById('form-date-start').value,
+                        dateEnd: document.getElementById('form-date-end').value,
+                        chop: document.getElementById('form-chop').value,
+                        name: document.getElementById('form-name').value,
+                        kategori: document.getElementById('form-kategori').value,
+                        sbuUtama: "SBU 1",
+                        salesUtamaStatus: "OK",
+                        otherSbus: otherSbus,
+                        orderStatus: "Will Order",
+                        rftStage: "Test 1/3 (OK)",
+                        attachmentName: fileName || "",
+                        attachmentData: fileData || "",
+                        remarks: document.getElementById('form-remarks').value
+                    });
+                }
+
+                closeModal('item-modal');
+                updateKPIs();
+                renderTrialsTable();
+                renderCharts();
+                showToast("Data trial berhasil disimpan!");
+            };
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    saveRecord(file.name, e.target.result);
+                };
+                reader.readAsDataURL(file);
+            } else {
+                const existingName = id ? (trialItems.find(i => i.id === id)?.attachmentName || "") : "";
+                const existingData = id ? (trialItems.find(i => i.id === id)?.attachmentData || "") : "";
+                saveRecord(existingName, existingData);
+            }
+        }
+
+        function deleteItem(id) {
+            if (confirm("Apakah Anda yakin ingin menghapus data trial ini?")) {
+                trialItems = trialItems.filter(i => i.id !== id);
+                updateKPIs();
+                renderTrialsTable();
+                renderCharts();
+                showToast("Data trial terhapus.");
+            }
+        }
+
+        function openImprovementModal() {
+            document.getElementById('improvement-modal').classList.remove('hidden');
+        }
+
+        function saveImprovement(event) {
+            event.preventDefault();
+            const title = document.getElementById('form-imp-title').value;
+            const category = document.getElementById('form-imp-category').value;
+            const creatorType = document.getElementById('form-imp-creator').value;
+            const date = document.getElementById('form-imp-date').value;
+            const desc = document.getElementById('form-imp-desc').value;
+
+            improvements.unshift({
+                id: `IMP-${Date.now()}`,
+                title: title,
+                category: category,
+                creatorType: creatorType,
+                date: date,
+                desc: desc
+            });
+
+            closeModal('improvement-modal');
+            renderImprovementsGrid();
+            showToast("Inisiatif Improvement berhasil ditambahkan!");
+        }
+
+        function deleteImprovement(id) {
+            if (confirm("Hapus improvement ini?")) {
+                improvements = improvements.filter(i => i.id !== id);
+                renderImprovementsGrid();
+                showToast("Improvement terhapus.");
+            }
+        }
+
+        function closeModal(modalId) {
+            if (modalId) {
+                const modal = document.getElementById(modalId);
+                if (modal) modal.classList.add('hidden');
+            } else {
+                document.getElementById('item-modal').classList.add('hidden');
+                document.getElementById('improvement-modal').classList.add('hidden');
+                document.getElementById('password-modal').classList.add('hidden');
+                document.getElementById('download-password-modal').classList.add('hidden');
+            }
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            const msgEl = document.getElementById('toast-message');
+            if (toast && msgEl) {
+                msgEl.textContent = msg;
+                toast.classList.remove('translate-y-20', 'opacity-0');
+                setTimeout(() => {
+                    toast.classList.add('translate-y-20', 'opacity-0');
+                }, 3000);
+            }
+        }
+
+        // Close Popups on Outside Click
+        window.addEventListener('click', function(e) {
+            const popup = document.getElementById('excel-filter-popup');
+            if (popup && !popup.contains(e.target) && !e.target.closest('button[onclick*="toggleExcelFilterMenu"]')) {
+                closeExcelFilterPopup();
+            }
+        });
+
+        // INITIALIZATION
+        document.addEventListener('DOMContentLoaded', () => {
+            updateKPIs();
+            renderCharts();
+            renderImprovementsGrid();
+            renderTrialsTable();
+            updateAdminViewUI();
+        });
+    </script>
+</body>
+</html>
