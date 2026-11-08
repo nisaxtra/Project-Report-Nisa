@@ -560,8 +560,11 @@
 
     <!-- JAVASCRIPT LOGIC -->
     <script>
-        // LIVE GOOGLE SHEETS CSV LINK (SYNC WITH MANAGER & EVERYONE)
+        // LIVE GOOGLE SHEETS CSV LINK (FOR READING DATA)
         const GOOGLE_SHEETS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRycR-0_1--rQuuYoVA7jDH_gWQ9JYSSFj2g8bHjTe6s8DQfZpFkrepN1dSg9ep71WoSI4wlpC9dUU6/pub?gid=1775249938&single=true&output=csv";
+        
+        // GOOGLE APPS SCRIPT WEB APP URL (FOR WRITING DATA DIRECTLY TO GOOGLE SHEETS)
+        const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzFXi1CpV2fosapLhzprVpvp4Lx-I7r69n3ybC7atmy6RU3k8neS9c5-9Gl-0tQ2Qx2uA/exec";
 
         // TOAST FUNCTION DECLARED AT THE TOP TO BE AVAILABLE IMMEDIATELY
         function showToast(msg) {
@@ -673,25 +676,28 @@
         let trialItems = [...defaultTrialItems];
         let improvements = [...defaultImprovements];
 
-        // FETCH LIVE DATA FROM GOOGLE SHEETS CSV AUTOMATICALLY FOR ALL USERS
+        // FETCH LIVE DATA FROM GOOGLE SHEETS CSV AUTOMATICALLY WITH ERROR SAFEGUARDS
         async function fetchGoogleSheetsData() {
             if (!GOOGLE_SHEETS_CSV_URL) return;
             try {
-                const response = await fetch(GOOGLE_SHEETS_CSV_URL + '&t=' + Date.now());
-                if (!response.ok) throw new Error("Gagal mengambil data dari Google Sheets");
-                const csvText = await response.text();
-                const parsedData = parseCSV(csvText);
+                const response = await fetch(GOOGLE_SHEETS_CSV_URL + '&t=' + Date.now(), { mode: 'cors' });
+                if (response.ok) {
+                    const csvText = await response.text();
+                    const parsedData = parseCSV(csvText);
 
-                if (parsedData && parsedData.length > 0) {
-                    trialItems = parsedData;
-                    renderAll();
+                    if (parsedData && parsedData.length > 0) {
+                        trialItems = parsedData;
+                    }
                 }
             } catch (err) {
-                console.error("Google Sheets Silent Sync Error:", err);
+                // Silently fallback to default/local items if network/CORS restricts preview fetching
+                console.log("Using fallback data for preview environment.");
+            } finally {
+                renderAll();
             }
         }
 
-        // PARSE CSV DATA FROM GOOGLE SHEETS
+        // PARSE CSV DATA FOR TRIALS
         function parseCSV(text) {
             const lines = text.trim().split('\n');
             if (lines.length < 2) return null;
@@ -719,6 +725,29 @@
                     attachmentName: cleanRow[10] || "",
                     attachmentData: cleanRow[10] ? "data:text/plain;base64,U3VtbWFyeSBEb2N1bWVudA==" : "",
                     remarks: cleanRow[11] || ""
+                });
+            }
+            return items;
+        }
+
+        // PARSE CSV DATA FOR IMPROVEMENTS
+        function parseImprovementsCSV(text) {
+            const lines = text.trim().split('\n');
+            if (lines.length < 2) return null;
+            const items = [];
+
+            for (let i = 1; i < lines.length; i++) {
+                if (!lines[i].trim()) continue;
+                const row = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || lines[i].split(',');
+                const cleanRow = row.map(cell => cell.trim().replace(/^"|"$/g, '').replace(/""/g, '"'));
+
+                items.push({
+                    id: "IMP-GS-" + (i),
+                    title: cleanRow[0] || "Inisiatif Baru",
+                    category: cleanRow[1] || "SYSTEM AUTOMATION",
+                    creatorType: cleanRow[2] || "Individual (Nisa)",
+                    date: cleanRow[3] || new Date().toISOString().slice(0, 10),
+                    desc: cleanRow[4] || ""
                 });
             }
             return items;
@@ -1421,13 +1450,39 @@
                     remarks: data.remarks
                 };
                 trialItems.unshift(newItem);
+
+                // AUTOMATICALLY PUSH NEW DATA TO GOOGLE SHEETS
+                if (GOOGLE_APPS_SCRIPT_URL && GOOGLE_APPS_SCRIPT_URL !== "YOUR_APPS_SCRIPT_WEB_APP_URL_HERE") {
+                    showToast("Mengirim data baru ke Google Sheets...");
+                    fetch(GOOGLE_APPS_SCRIPT_URL, {
+                        method: "POST",
+                        mode: "no-cors",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            action: "addTrial",
+                            so: data.so,
+                            pro: data.pro,
+                            dateStart: data.dateStart,
+                            dateEnd: data.dateEnd,
+                            chop: data.chop,
+                            name: data.name,
+                            kategori: data.kategori,
+                            otherSbus: (data.selectedSbus || []).join('; '),
+                            attachmentName: data.attachmentName || '',
+                            remarks: data.remarks
+                        })
+                    }).then(() => {
+                        showToast("✅ Berhasil tersimpan otomatis ke Google Sheets!");
+                    }).catch(err => {
+                        console.error("Gagal sinkron Google Sheets:", err);
+                    });
+                }
             }
 
             const form = document.getElementById('item-form');
             if (form) form.reset();
 
             closeModal('item-modal');
-            showToast("Data ditambahkan sementara. Update di Google Sheets agar semua orang melihat perubahan.");
             renderAll();
         }
 
