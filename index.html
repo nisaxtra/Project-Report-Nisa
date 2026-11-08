@@ -493,7 +493,7 @@
     <div id="password-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 space-y-4 border border-slate-100">
             <div class="flex justify-between items-center border-b border-slate-100 pb-2">
-                <h3 class="text-base font-bold text-slate-900">🔑 Login Admin (Mode Nisa)</h3>
+                <h3 class="text-base font-bold text-slate-900">🔑 Login Owner (Mode Nisa)</h3>
                 <button onclick="closeModal('password-modal')" class="text-slate-400 hover:text-slate-600 font-bold">✕</button>
             </div>
             <div class="space-y-3">
@@ -660,14 +660,14 @@
                         for (let i = 1; i < rows.length; i++) {
                             const r = rows[i];
                             // Check if this is an Improvement row marked with [IMP] at column M (index 12)
-                            if (r[12] === '[IMP]') {
+                            if (r[13] === '[IMP]') {
                                 parsedImprovements.push({
                                     id: `SHEET-IMP-${i}`,
-                                    title: r[13] || '',
-                                    category: r[14] || '',
-                                    creatorType: r[15] || '',
-                                    date: r[16] || '',
-                                    desc: r[17] || ''
+                                    title: r[14] || '',
+                                    category: r[15] || '',
+                                    creatorType: r[16] || '',
+                                    date: r[17] || '',
+                                    desc: r[18] || ''
                                 });
                             } else if (r[0]) {
                                 parsedItems.push({
