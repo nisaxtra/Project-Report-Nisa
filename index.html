@@ -560,7 +560,23 @@
 
     <!-- JAVASCRIPT LOGIC -->
     <script>
-        // DATA INITIALIZATION WITH LOCALSTORAGE PERSISTENCE
+        // LIVE GOOGLE SHEETS CSV LINK (SYNC WITH MANAGER & EVERYONE)
+        const GOOGLE_SHEETS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRycR-0_1--rQuuYoVA7jDH_gWQ9JYSSFj2g8bHjTe6s8DQfZpFkrepN1dSg9ep71WoSI4wlpC9dUU6/pub?gid=1775249938&single=true&output=csv";
+
+        // TOAST FUNCTION DECLARED AT THE TOP TO BE AVAILABLE IMMEDIATELY
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-message');
+            if (toast && toastMsg) {
+                toastMsg.textContent = msg;
+                toast.classList.remove('translate-y-20', 'opacity-0');
+                setTimeout(() => {
+                    toast.classList.add('translate-y-20', 'opacity-0');
+                }, 3000);
+            }
+        }
+
+        // DATA INITIALIZATION WITH LOCALSTORAGE & GOOGLE SHEETS PERSISTENCE
         const defaultTrialItems = [
             {
                 id: "PRJ-001",
@@ -662,6 +678,58 @@
             localStorage.setItem('woven_improvements', JSON.stringify(improvements));
         }
 
+        // FETCH LIVE DATA FROM GOOGLE SHEETS CSV AUTOMATICALLY
+        async function fetchGoogleSheetsData() {
+            if (!GOOGLE_SHEETS_CSV_URL) return;
+            try {
+                const response = await fetch(GOOGLE_SHEETS_CSV_URL);
+                if (!response.ok) throw new Error("Gagal mengambil data dari Google Sheets");
+                const csvText = await response.text();
+                const parsedData = parseCSV(csvText);
+
+                if (parsedData && parsedData.length > 0) {
+                    trialItems = parsedData;
+                    saveToLocalStorage();
+                    renderAll();
+                }
+            } catch (err) {
+                console.error("Google Sheets Silent Sync Error:", err);
+            }
+        }
+
+        // PARSE CSV DATA FROM GOOGLE SHEETS
+        function parseCSV(text) {
+            const lines = text.trim().split('\n');
+            if (lines.length < 2) return null;
+            const items = [];
+
+            for (let i = 1; i < lines.length; i++) {
+                if (!lines[i].trim()) continue;
+                const row = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || lines[i].split(',');
+                const cleanRow = row.map(cell => cell.trim().replace(/^"|"$/g, '').replace(/""/g, '"'));
+
+                items.push({
+                    id: "GS-" + (i),
+                    so: cleanRow[0] || `SO-${1000 + i}`,
+                    pro: cleanRow[1] || `PRO-${2000 + i}`,
+                    dateStart: cleanRow[2] || "2026-10-01",
+                    dateEnd: cleanRow[3] || "2026-10-05",
+                    chop: cleanRow[4] || "TEX",
+                    name: cleanRow[5] || "Trial Fabric",
+                    kategori: cleanRow[6] || "1x Test / Matrix",
+                    sbuUtama: "SBU 1",
+                    salesUtamaStatus: cleanRow[7] || "OK",
+                    otherSbus: cleanRow[8] ? cleanRow[8].split(';') : [],
+                    orderStatus: cleanRow[9] || "Will Order",
+                    rftStage: cleanRow[10] ? "Approved" : "N/A",
+                    attachmentName: cleanRow[10] || "",
+                    attachmentData: cleanRow[10] ? "data:text/plain;base64,U3VtbWFyeSBEb2N1bWVudA==" : "",
+                    remarks: cleanRow[11] || ""
+                });
+            }
+            return items;
+        }
+
         let isAdminMode = false;
         const ADMIN_PASSWORD_DEFAULT = "1234";
         const DOWNLOAD_PASSWORD_DEFAULT = "genz";
@@ -739,12 +807,16 @@
                 jsPDF:        { unit: 'in', format: 'a4', orientation: 'landscape' }
             };
 
-            html2pdf().set(opt).from(element).save().then(() => {
-                showToast("File PDF berhasil diunduh!");
-            }).catch(err => {
-                console.error("PDF Export error:", err);
+            if (typeof html2pdf !== 'undefined') {
+                html2pdf().set(opt).from(element).save().then(() => {
+                    showToast("File PDF berhasil diunduh!");
+                }).catch(err => {
+                    console.error("PDF Export error:", err);
+                    window.print();
+                });
+            } else {
                 window.print();
-            });
+            }
         }
 
         function executeAttachmentDownload(itemId) {
@@ -883,7 +955,7 @@
             }
         }
 
-        // --- FILTER & DATA HANDLING ---
+        // --- CORE RENDER & KPI CALCULATIONS ---
         function getFilteredTrialItems() {
             const search = (document.getElementById('global-search')?.value || '').toLowerCase();
             const dateFrom = document.getElementById('filter-date-from')?.value;
@@ -891,11 +963,11 @@
 
             return trialItems.filter(item => {
                 const matchSearch = !search || 
-                    item.so.toLowerCase().includes(search) || 
-                    item.pro.toLowerCase().includes(search) || 
-                    item.name.toLowerCase().includes(search) || 
-                    item.chop.toLowerCase().includes(search) ||
-                    item.kategori.toLowerCase().includes(search);
+                    (item.so || '').toLowerCase().includes(search) || 
+                    (item.pro || '').toLowerCase().includes(search) || 
+                    (item.name || '').toLowerCase().includes(search) || 
+                    (item.chop || '').toLowerCase().includes(search) ||
+                    (item.kategori || '').toLowerCase().includes(search);
 
                 let matchDate = true;
                 if (dateFrom && item.dateStart < dateFrom) matchDate = false;
@@ -904,15 +976,7 @@
                 let matchColumns = true;
                 for (const [colKey, selectedVals] of Object.entries(columnFilters)) {
                     if (selectedVals && selectedVals.length > 0) {
-                        let itemVal = '';
-                        if (colKey === 'so') itemVal = item.so;
-                        else if (colKey === 'pro') itemVal = item.pro;
-                        else if (colKey === 'chop') itemVal = item.chop;
-                        else if (colKey === 'name') itemVal = item.name;
-                        else if (colKey === 'kategori') itemVal = item.kategori;
-                        else if (colKey === 'salesUtamaStatus') itemVal = item.salesUtamaStatus;
-                        else if (colKey === 'orderStatus') itemVal = item.orderStatus;
-
+                        let itemVal = item[colKey] || '';
                         if (!selectedVals.includes(itemVal)) {
                             matchColumns = false;
                             break;
@@ -967,7 +1031,6 @@
             renderAll();
         }
 
-        // --- RENDER TABLE & CARDS ---
         function renderTrialsTable() {
             const tbody = document.getElementById('trials-table-body');
             const filtered = getFilteredTrialItems();
@@ -1069,23 +1132,22 @@
             const salesRate = total > 0 ? Math.round((salesOkCount / total) * 100) : 0;
             const orderRate = total > 0 ? Math.round((willOrderCount / total) * 100) : 0;
 
-            document.getElementById('kpi-total').textContent = total;
-            document.getElementById('kpi-sales-utama').textContent = `${salesRate}%`;
-            document.getElementById('kpi-order-rate').textContent = `${orderRate}%`;
-            document.getElementById('kpi-sbu-interest').textContent = sbusSet.size;
-            document.getElementById('kpi-promo-ready').textContent = promoReadyCount;
+            if (document.getElementById('kpi-total')) document.getElementById('kpi-total').textContent = total;
+            if (document.getElementById('kpi-sales-utama')) document.getElementById('kpi-sales-utama').textContent = `${salesRate}%`;
+            if (document.getElementById('kpi-order-rate')) document.getElementById('kpi-order-rate').textContent = `${orderRate}%`;
+            if (document.getElementById('kpi-sbu-interest')) document.getElementById('kpi-sbu-interest').textContent = sbusSet.size;
+            if (document.getElementById('kpi-promo-ready')) document.getElementById('kpi-promo-ready').textContent = promoReadyCount;
         }
 
         function renderCharts() {
             const filtered = getFilteredTrialItems();
-
             const total = filtered.length;
             const salesOk = filtered.filter(i => i.salesUtamaStatus === 'OK').length;
             const willOrder = filtered.filter(i => i.orderStatus === 'Will Order').length;
             const promoReady = filtered.filter(i => i.kategori === '3x Test (Promo)').length;
 
             const ctxBar = document.getElementById('chart-approval-status')?.getContext('2d');
-            if (ctxBar) {
+            if (ctxBar && typeof Chart !== 'undefined') {
                 if (chartApprovalStatus) chartApprovalStatus.destroy();
                 chartApprovalStatus = new Chart(ctxBar, {
                     type: 'bar',
@@ -1112,7 +1174,7 @@
             const cat3x = filtered.filter(i => i.kategori === '3x Test (Promo)').length;
 
             const ctxDoughnut = document.getElementById('chart-category-doughnut')?.getContext('2d');
-            if (ctxDoughnut) {
+            if (ctxDoughnut && typeof Chart !== 'undefined') {
                 if (chartCategoryDoughnut) chartCategoryDoughnut.destroy();
                 chartCategoryDoughnut = new Chart(ctxDoughnut, {
                     type: 'doughnut',
@@ -1258,7 +1320,6 @@
             if (form) form.reset();
             document.getElementById('form-id').value = '';
             
-            // Uncheck all SBU checkboxes
             document.querySelectorAll('input[name="sbu-other"]').forEach(cb => cb.checked = false);
 
             const fileInput = document.getElementById('form-summary-file');
@@ -1368,10 +1429,8 @@
                 trialItems.unshift(newItem);
             }
 
-            // Save to LocalStorage permanently
             saveToLocalStorage();
 
-            // Reset form
             const form = document.getElementById('item-form');
             if (form) form.reset();
 
@@ -1409,6 +1468,7 @@
                 title, category, creatorType, date, desc
             });
 
+            // Menyimpan ke LocalStorage secara permanen
             saveToLocalStorage();
 
             const form = document.getElementById('improvement-form');
@@ -1422,8 +1482,9 @@
         function deleteImprovement(id) {
             if (confirm("Hapus inisiatif improvement ini?")) {
                 improvements = improvements.filter(i => i.id !== id);
+                // Menyimpan perubahan penghapusan ke LocalStorage
                 saveToLocalStorage();
-                showToast("Inisiatif dihapus");
+                showToast("Inisiatif berhasil dihapus permanen");
                 renderImprovementsGrid();
             }
         }
@@ -1431,18 +1492,6 @@
         function closeModal(modalId) {
             const modal = document.getElementById(modalId);
             if (modal) modal.classList.add('hidden');
-        }
-
-        function showToast(msg) {
-            const toast = document.getElementById('toast');
-            const toastMsg = document.getElementById('toast-message');
-            if (toast && toastMsg) {
-                toastMsg.textContent = msg;
-                toast.classList.remove('translate-y-20', 'opacity-0');
-                setTimeout(() => {
-                    toast.classList.add('translate-y-20', 'opacity-0');
-                }, 3000);
-            }
         }
 
         function handleExcelUpload(e) {
@@ -1498,13 +1547,14 @@
 
         // --- INITIALIZATION ON LOAD ---
         window.onload = function() {
+            fetchGoogleSheetsData();
             renderAll();
             updateAdminModeUI();
             
             document.addEventListener('click', function(e) {
                 const popup = document.getElementById('excel-filter-popup');
                 if (popup && !popup.contains(e.target) && !e.target.closest('button[onclick*="toggleExcelFilterMenu"]')) {
-                    closeExcelFilterPopup();
+                    if (typeof closeExcelFilterPopup === 'function') closeExcelFilterPopup();
                 }
             });
         };
