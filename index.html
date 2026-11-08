@@ -576,7 +576,7 @@
             }
         }
 
-        // DATA INITIALIZATION WITH LOCALSTORAGE & GOOGLE SHEETS PERSISTENCE
+        // DEFAULT DATA FALLBACKS (ONLY UNTIL GOOGLE SHEETS FETCHES)
         const defaultTrialItems = [
             {
                 id: "PRJ-001",
@@ -669,27 +669,21 @@
             }
         ];
 
-        // Load data from LocalStorage if available
-        let trialItems = JSON.parse(localStorage.getItem('woven_trial_items')) || defaultTrialItems;
-        let improvements = JSON.parse(localStorage.getItem('woven_improvements')) || defaultImprovements;
+        // GLOBAL IN-MEMORY ARRAYS (NO LOCALSTORAGE SAVING TO AVOID SINGLE-DEVICE ISOLATION)
+        let trialItems = [...defaultTrialItems];
+        let improvements = [...defaultImprovements];
 
-        function saveToLocalStorage() {
-            localStorage.setItem('woven_trial_items', JSON.stringify(trialItems));
-            localStorage.setItem('woven_improvements', JSON.stringify(improvements));
-        }
-
-        // FETCH LIVE DATA FROM GOOGLE SHEETS CSV AUTOMATICALLY
+        // FETCH LIVE DATA FROM GOOGLE SHEETS CSV AUTOMATICALLY FOR ALL USERS
         async function fetchGoogleSheetsData() {
             if (!GOOGLE_SHEETS_CSV_URL) return;
             try {
-                const response = await fetch(GOOGLE_SHEETS_CSV_URL);
+                const response = await fetch(GOOGLE_SHEETS_CSV_URL + '&t=' + Date.now());
                 if (!response.ok) throw new Error("Gagal mengambil data dari Google Sheets");
                 const csvText = await response.text();
                 const parsedData = parseCSV(csvText);
 
                 if (parsedData && parsedData.length > 0) {
                     trialItems = parsedData;
-                    saveToLocalStorage();
                     renderAll();
                 }
             } catch (err) {
@@ -1429,21 +1423,18 @@
                 trialItems.unshift(newItem);
             }
 
-            saveToLocalStorage();
-
             const form = document.getElementById('item-form');
             if (form) form.reset();
 
             closeModal('item-modal');
-            showToast("Data trial berhasil disimpan permanen!");
+            showToast("Data ditambahkan sementara. Update di Google Sheets agar semua orang melihat perubahan.");
             renderAll();
         }
 
         function deleteItem(id) {
-            if (confirm("Apakah Anda yakin ingin menghapus data trial ini?")) {
+            if (confirm("Apakah Anda yakin ingin menghapus data trial ini dari sesi ini?")) {
                 trialItems = trialItems.filter(i => i.id !== id);
-                saveToLocalStorage();
-                showToast("Data trial telah dihapus");
+                showToast("Data trial telah dihapus dari sesi ini");
                 renderAll();
             }
         }
@@ -1468,23 +1459,18 @@
                 title, category, creatorType, date, desc
             });
 
-            // Menyimpan ke LocalStorage secara permanen
-            saveToLocalStorage();
-
             const form = document.getElementById('improvement-form');
             if (form) form.reset();
 
             closeModal('improvement-modal');
-            showToast("Inisiatif Improvement berhasil disimpan permanen!");
+            showToast("Inisiatif Improvement berhasil ditambahkan!");
             renderImprovementsGrid();
         }
 
         function deleteImprovement(id) {
             if (confirm("Hapus inisiatif improvement ini?")) {
                 improvements = improvements.filter(i => i.id !== id);
-                // Menyimpan perubahan penghapusan ke LocalStorage
-                saveToLocalStorage();
-                showToast("Inisiatif berhasil dihapus permanen");
+                showToast("Inisiatif berhasil dihapus");
                 renderImprovementsGrid();
             }
         }
