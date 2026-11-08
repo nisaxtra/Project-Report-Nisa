@@ -62,7 +62,7 @@
                 <div class="flex items-center space-x-2">
                     <!-- MODE INDICATOR BADGE -->
                     <div id="current-mode-badge" class="bg-blue-950 text-blue-200 border border-blue-800 px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap">
-                        👁️ Mode Umum
+                        👁️ Mode Umum (Atasan)
                     </div>
 
                     <!-- LOGIN / MODE TOGGLE -->
@@ -565,7 +565,6 @@
                 kategori: "1x Test / Matrix",
                 sbuUtama: "SBU 1",
                 salesUtamaStatus: "OK",
-                otherSbus: ["SBU 2", "SBU 4"],
                 orderStatus: "Will Order",
                 rftStage: "N/A",
                 attachmentName: "Summary_Winburry_Batch1.pdf",
@@ -583,7 +582,6 @@
                 kategori: "SO Berbayar",
                 sbuUtama: "SBU 2",
                 salesUtamaStatus: "OK",
-                otherSbus: ["SBU 3"],
                 orderStatus: "Will Order",
                 rftStage: "N/A",
                 attachmentName: "",
@@ -601,7 +599,6 @@
                 kategori: "3x Test (Promo)",
                 sbuUtama: "SBU 1",
                 salesUtamaStatus: "OK",
-                otherSbus: ["SBU 1", "SBU 5"],
                 orderStatus: "Will Order",
                 rftStage: "3x Test Selesai (OK)",
                 attachmentName: "Summary_3xTest_Winburry.pdf",
@@ -645,13 +642,9 @@
             }
         ];
 
-        // GLOBAL IN-MEMORY ARRAYS (NO LOCALSTORAGE SAVING TO AVOID SINGLE-DEVICE ISOLATION)
+        // GLOBAL IN-MEMORY ARRAYS
         let trialItems = [...defaultTrialItems];
-        let improvements = JSON.parse(localStorage.getItem('woven_improvements')) || [...defaultImprovements];
-
-        function saveImprovementsStorage() {
-            localStorage.setItem('woven_improvements', JSON.stringify(improvements));
-        }
+        let improvements = [...defaultImprovements];
 
         // --- FETCH LIVE GOOGLE SHEETS DATA ---
         function fetchGoogleSheetsData() {
@@ -662,9 +655,21 @@
                     const rows = parseCSV(csvText);
                     if (rows.length > 1) {
                         const parsedItems = [];
+                        const parsedImprovements = [];
+                        
                         for (let i = 1; i < rows.length; i++) {
                             const r = rows[i];
-                            if (r.length >= 11 && r[0]) {
+                            // Check if this is an Improvement row marked with [IMP] at column M (index 12)
+                            if (r[12] === '[IMP]') {
+                                parsedImprovements.push({
+                                    id: `SHEET-IMP-${i}`,
+                                    title: r[13] || '',
+                                    category: r[14] || '',
+                                    creatorType: r[15] || '',
+                                    date: r[16] || '',
+                                    desc: r[17] || ''
+                                });
+                            } else if (r[0]) {
                                 parsedItems.push({
                                     id: `SHEET-${i}`,
                                     so: r[0] || '',
@@ -676,7 +681,6 @@
                                     kategori: r[6] || '1x Test / Matrix',
                                     sbuUtama: r[7] || 'SBU 1',
                                     salesUtamaStatus: r[7]?.toUpperCase() === 'OK' || r[7]?.toUpperCase() === 'PENDING' ? r[7] : 'OK',
-                                    otherSbus: r[8] ? r[8].split(',').map(s => s.trim()).filter(Boolean) : [],
                                     orderStatus: r[9] || 'Will Order',
                                     rftStage: r[6] === '3x Test (Promo)' ? '3x Test Selesai (OK)' : 'N/A',
                                     attachmentName: r[10] || '',
@@ -687,8 +691,11 @@
                         }
                         if (parsedItems.length > 0) {
                             trialItems = parsedItems;
-                            renderAll();
                         }
+                        if (parsedImprovements.length > 0) {
+                            improvements = parsedImprovements;
+                        }
+                        renderAll();
                     }
                 })
                 .catch(err => {
@@ -1210,6 +1217,51 @@
             renderAll();
         }
 
+        function openImprovementModal() {
+            const form = document.getElementById('improvement-form');
+            if (form) form.reset();
+            const modal = document.getElementById('improvement-modal');
+            if (modal) modal.classList.remove('hidden');
+        }
+
+        function saveImprovement(e) {
+            e.preventDefault();
+            const title = document.getElementById('form-imp-title').value;
+            const category = document.getElementById('form-imp-category').value;
+            const creatorType = document.getElementById('form-imp-creator').value;
+            const date = document.getElementById('form-imp-date').value;
+            const desc = document.getElementById('form-imp-desc').value;
+
+            const newImp = {
+                id: `IMP-${Date.now()}`,
+                title, category, creatorType, date, desc
+            };
+            improvements.unshift(newImp);
+
+            if (GOOGLE_APPS_SCRIPT_URL && GOOGLE_APPS_SCRIPT_URL !== "YOUR_APPS_SCRIPT_WEB_APP_URL_HERE") {
+                showToast("Mengirim Improvement ke Google Sheets...");
+                fetch(GOOGLE_APPS_SCRIPT_URL, {
+                    method: "POST",
+                    mode: "no-cors",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        action: "addImprovement",
+                        title, category, creatorType, date, desc
+                    })
+                }).then(() => {
+                    showToast("✅ Improvement tersimpan otomatis ke Google Sheets!");
+                }).catch(err => {
+                    console.error("Gagal sinkron Improvement:", err);
+                });
+            }
+
+            const form = document.getElementById('improvement-form');
+            if (form) form.reset();
+
+            closeModal('improvement-modal');
+            renderImprovementsGrid();
+        }
+
         // --- HELPER & MODAL FUNCTIONS ---
         function closeModal(modalId) {
             const modal = document.getElementById(modalId);
@@ -1224,6 +1276,7 @@
             improvements.forEach(imp => {
                 const card = document.createElement('div');
                 card.className = "bg-slate-50 rounded-xl p-4 border border-slate-200/80 hover:border-indigo-300 transition space-y-2 relative group";
+
                 card.innerHTML = `
                     <div class="flex items-center space-x-1.5">
                         <span class="bg-indigo-100 text-indigo-800 text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase">${imp.category}</span>
