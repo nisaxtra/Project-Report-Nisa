@@ -676,6 +676,12 @@
 
         function is3xTest(item) { return item.kategori === 'TEST 3'; }
 
+        // Hitung 3x Test: item dengan CHOP dan NOTICE yang sama dianggap 1 (mis. 3 warna/PRO dari satu paket test)
+        function count3xTest(list) {
+            const norm = (v) => String(v || '').trim().toLowerCase().replace(/\s+/g, ' ');
+            return new Set(list.filter(is3xTest).map(i => norm(i.chop) + '||' + norm(i.notice))).size;
+        }
+
         function normalizeItem(o) {
             const s = (v) => String(v == null ? '' : v).trim();
             const dStart = parseDateFlexible(o.dateStart);
@@ -1080,11 +1086,11 @@
                     badge.textContent = "✏️ Mode Nisa (Edit)";
                     badge.className = "bg-emerald-950 text-emerald-200 border border-emerald-800 px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap";
                 }
-                if (btn) btn.innerHTML = "<span>🔒 Logout Admin</span>";
+                if (btn) btn.innerHTML = "<span>🔒 Logout </span>";
                 adminElements.forEach(el => el.classList.remove('hidden'));
             } else {
                 if (badge) {
-                    badge.textContent = "👁️ Mode Umum";
+                    badge.textContent = "👁️ Mode Umum ";
                     badge.className = "bg-blue-950 text-blue-200 border border-blue-800 px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap";
                 }
                 if (btn) btn.innerHTML = "<span>🔑 Login Nisa</span>";
@@ -1385,7 +1391,7 @@
             const total = filtered.length;
             const salesOkCount = filtered.filter(i => i.salesStatus === 'OK').length;
             const waitingCount = filtered.filter(i => i.salesStatus === 'Menunggu').length;
-            const test3xCount = filtered.filter(i => is3xTest(i)).length;
+            const test3xCount = count3xTest(filtered);
 
             const salesRate = total > 0 ? Math.round((salesOkCount / total) * 100) : 0;
 
@@ -1626,7 +1632,7 @@
             const salesOk = filtered.filter(i => i.salesStatus === 'OK').length;
             const waiting = filtered.filter(i => i.salesStatus === 'Menunggu').length;
             const failed = filtered.filter(i => i.salesStatus === 'Failed').length;
-            const test3x = filtered.filter(i => is3xTest(i)).length;
+            const test3x = count3xTest(filtered);
 
             const ctxBar = document.getElementById('chart-approval-status')?.getContext('2d');
             if (ctxBar) {
