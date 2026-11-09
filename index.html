@@ -32,7 +32,7 @@
     <header class="bg-slate-900 text-white shadow-lg sticky top-0 z-30 no-print border-b border-slate-800">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex flex-wrap items-center justify-between h-auto py-3 gap-3">
-
+                
                 <!-- BRANDING & USER IDENTITY -->
                 <div class="flex items-center space-x-3">
                     <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-500 to-fuchsia-600 flex items-center justify-center font-black text-base shadow-md border border-white/20 text-white tracking-tight">
@@ -84,7 +84,6 @@
     <!-- MAIN CONTAINER -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full space-y-6">
 
-        <!-- CREDIT BLOCK (hanya muncul di hasil PDF / print) -->
         <div id="pdf-credit-top" class="hidden print:block bg-slate-900 text-white rounded-xl px-5 py-3">
             <div class="text-sm font-extrabold">WOVEN RND PROCESSING REPORT</div>
             <div class="text-[11px] text-slate-300 mt-0.5">Made by Nisa R (Staff RND Woven - GL2500150)</div>
@@ -93,7 +92,6 @@
         <!-- ================= PAGE 1: EXECUTIVE RESUME & SUMMARY ================= -->
         <div id="page-summary" class="space-y-6">
 
-            <!-- FILTER DATE RANGE FOR SUMMARY -->
             <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-4 flex flex-wrap items-center justify-between gap-4 no-print">
                 <div class="flex items-center space-x-2">
                     <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">📅 Filter Range Tanggal:</span>
@@ -115,7 +113,6 @@
 
             <!-- EXECUTIVE KPI CARDS -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-
                 <div onclick="drillDownKPI('all')" class="bg-white rounded-xl shadow-xs border border-slate-200 p-4 cursor-pointer hover:border-indigo-400 hover:shadow-md transition group">
                     <div class="flex justify-between items-start">
                         <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Item / SO</span>
@@ -159,10 +156,9 @@
                         <span class="text-[11px] text-amber-700 font-medium">Promo Ready</span>
                     </div>
                 </div>
-
             </div>
 
-            <!-- VISUAL DIAGRAMS SECTION -->
+            <!-- CHARTS SECTION -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-5 lg:col-span-2">
                     <h3 class="text-sm font-bold text-slate-800 mb-4 flex items-center justify-between">
@@ -197,18 +193,11 @@
                 </div>
 
                 <div id="improvements-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <!-- Populated dynamically via JS -->
-                </div>
-            </div>
-
-        </div>
-
         <!-- ================= PAGE 2: DAILY TRIAL LOG ================= -->
         <div id="page-log" class="hidden space-y-4">
 
             <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-4 space-y-3 no-print">
                 <div class="flex flex-wrap items-center justify-between gap-3">
-
                     <div class="flex items-center space-x-2">
                         <h3 class="text-sm font-bold text-slate-900">📋 Daily Trial & Sales Approval Log</h3>
                         <span id="trial-count-badge" class="bg-indigo-100 text-indigo-800 text-[11px] font-bold px-2 py-0.5 rounded-full">0 Item</span>
@@ -216,7 +205,7 @@
 
                     <div class="flex flex-wrap items-center gap-2">
                         <div class="relative">
-                            <input type="text" id="global-search" oninput="renderTrialsTable()" placeholder="Cari SO, PRO, Fabric..." class="w-56 bg-slate-50 border border-slate-300 rounded-lg pl-8 pr-3 py-1.5 text-xs font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                            <input type="text" id="global-search" oninput="renderTrialsTable()" placeholder="Cari SO, PRO, Customer, Item..." class="w-56 bg-slate-50 border border-slate-300 rounded-lg pl-8 pr-3 py-1.5 text-xs font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                             <span class="absolute left-2.5 top-2 text-slate-400 text-xs">🔍</span>
                         </div>
 
@@ -237,7 +226,6 @@
                             + Input Trial Harian
                         </button>
                     </div>
-
                 </div>
 
                 <div id="active-column-filters-bar" class="hidden bg-indigo-50 border border-indigo-100 rounded-lg p-2.5 flex items-center justify-between text-xs">
@@ -251,64 +239,75 @@
                 </div>
             </div>
 
+            <!-- TABLE SESUAI FORMAT EXCEL (SO, NO PRO, Tgl Pembuatan, Target Finish, Customer, Chop, Item, Color, Notice, Kategori, Test 1x, Sales Utama, SBU Lain) -->
             <div class="bg-white rounded-xl shadow-xs border border-slate-200 overflow-hidden">
                 <div class="overflow-x-auto custom-scrollbar max-h-[600px]">
-                    <table class="w-full text-left border-collapse min-w-[1200px]">
-
+                    <table class="w-full text-left border-collapse min-w-[1500px]">
                         <thead class="bg-slate-900 text-white sticky top-0 z-20 text-[11px] uppercase tracking-wider font-bold select-none">
                             <tr>
                                 <th class="px-3 py-3 border-b border-slate-800 whitespace-nowrap">
                                     <div class="flex items-center justify-between space-x-1">
-                                        <span>No. SO</span>
+                                        <span>SO</span>
                                         <button onclick="toggleExcelFilterMenu(event, 'so')" class="hover:bg-slate-700 p-0.5 rounded text-amber-400 no-print">🔻</button>
                                     </div>
                                 </th>
                                 <th class="px-3 py-3 border-b border-slate-800 whitespace-nowrap">
                                     <div class="flex items-center justify-between space-x-1">
-                                        <span>No. PRO</span>
+                                        <span>NO PRO</span>
                                         <button onclick="toggleExcelFilterMenu(event, 'pro')" class="hover:bg-slate-700 p-0.5 rounded text-amber-400 no-print">🔻</button>
                                     </div>
                                 </th>
-                                <th class="px-3 py-3 border-b border-slate-800 whitespace-nowrap">Tgl Buat</th>
-                                <th class="px-3 py-3 border-b border-slate-800 whitespace-nowrap">Tgl Done</th>
+                                <th class="px-3 py-3 border-b border-slate-800 whitespace-nowrap">Tanggal Pembuatan Kartu</th>
+                                <th class="px-3 py-3 border-b border-slate-800 whitespace-nowrap">Actual Target Finish</th>
                                 <th class="px-3 py-3 border-b border-slate-800 whitespace-nowrap">
                                     <div class="flex items-center justify-between space-x-1">
-                                        <span>Chop</span>
+                                        <span>Customer</span>
+                                        <button onclick="toggleExcelFilterMenu(event, 'customer')" class="hover:bg-slate-700 p-0.5 rounded text-amber-400 no-print">🔻</button>
+                                    </div>
+                                </th>
+                                <th class="px-3 py-3 border-b border-slate-800 whitespace-nowrap">
+                                    <div class="flex items-center justify-between space-x-1">
+                                        <span>CHOP</span>
                                         <button onclick="toggleExcelFilterMenu(event, 'chop')" class="hover:bg-slate-700 p-0.5 rounded text-amber-400 no-print">🔻</button>
                                     </div>
                                 </th>
                                 <th class="px-3 py-3 border-b border-slate-800 whitespace-nowrap">
                                     <div class="flex items-center justify-between space-x-1">
-                                        <span>Nama Fabric</span>
-                                        <button onclick="toggleExcelFilterMenu(event, 'name')" class="hover:bg-slate-700 p-0.5 rounded text-amber-400 no-print">🔻</button>
+                                        <span>ITEM</span>
+                                        <button onclick="toggleExcelFilterMenu(event, 'item')" class="hover:bg-slate-700 p-0.5 rounded text-amber-400 no-print">🔻</button>
                                     </div>
                                 </th>
                                 <th class="px-3 py-3 border-b border-slate-800 whitespace-nowrap">
                                     <div class="flex items-center justify-between space-x-1">
-                                        <span>Kategori Test</span>
-                                        <button onclick="toggleExcelFilterMenu(event, 'kategori')" class="hover:bg-slate-700 p-0.5 rounded text-amber-400 no-print">🔻</button>
+                                        <span>COLOR</span>
+                                        <button onclick="toggleExcelFilterMenu(event, 'color')" class="hover:bg-slate-700 p-0.5 rounded text-amber-400 no-print">🔻</button>
+                                    </div>
+                                </th>
+                                <th class="px-3 py-3 border-b border-slate-800 whitespace-nowrap">NOTICE</th>
+                                <th class="px-3 py-3 border-b border-slate-800 whitespace-nowrap">
+                                    <div class="flex items-center justify-between space-x-1">
+                                        <span>Kategori test Kartu</span>
+                                        <button onclick="toggleExcelFilterMenu(event, 'kategoriTest')" class="hover:bg-slate-700 p-0.5 rounded text-amber-400 no-print">🔻</button>
+                                    </div>
+                                </th>
+                                <th class="px-3 py-3 border-b border-slate-800 whitespace-nowrap">Test 1x</th>
+                                <th class="px-3 py-3 border-b border-slate-800 whitespace-nowrap">
+                                    <div class="flex items-center justify-between space-x-1">
+                                        <span>Sales UTAMA</span>
+                                        <button onclick="toggleExcelFilterMenu(event, 'salesUtama')" class="hover:bg-slate-700 p-0.5 rounded text-amber-400 no-print">🔻</button>
                                     </div>
                                 </th>
                                 <th class="px-3 py-3 border-b border-slate-800 whitespace-nowrap">
                                     <div class="flex items-center justify-between space-x-1">
-                                        <span>Sales Utama</span>
-                                        <button onclick="toggleExcelFilterMenu(event, 'salesUtamaStatus')" class="hover:bg-slate-700 p-0.5 rounded text-amber-400 no-print">🔻</button>
+                                        <span>SBU LAIN</span>
+                                        <button onclick="toggleExcelFilterMenu(event, 'sbuLain')" class="hover:bg-slate-700 p-0.5 rounded text-amber-400 no-print">🔻</button>
                                     </div>
                                 </th>
-                                <th class="px-3 py-3 border-b border-slate-800 whitespace-nowrap">
-                                    <div class="flex items-center justify-between space-x-1">
-                                        <span>Status Order</span>
-                                        <button onclick="toggleExcelFilterMenu(event, 'orderStatus')" class="hover:bg-slate-700 p-0.5 rounded text-amber-400 no-print">🔻</button>
-                                    </div>
-                                </th>
-                                <th class="px-3 py-3 border-b border-slate-800 whitespace-nowrap">Summary File</th>
                                 <th class="px-3 py-3 border-b border-slate-800 whitespace-nowrap text-right">Aksi</th>
                             </tr>
                         </thead>
-
                         <tbody id="trials-table-body" class="divide-y divide-slate-100 bg-white">
                         </tbody>
-
                     </table>
                 </div>
             </div>
@@ -324,33 +323,24 @@
         </div>
     </footer>
 
-    <!-- EXCEL-STYLE COLUMN FILTER POP-UP MENU -->
+    <!-- EXCEL-STYLE COLUMN FILTER POP-UP -->
     <div id="excel-filter-popup" class="hidden fixed z-50 bg-slate-900 text-white rounded-xl shadow-2xl border border-slate-700 w-64 p-3 space-y-3 text-xs">
         <div class="flex justify-between items-center border-b border-slate-700 pb-2">
             <span id="excel-filter-column-title" class="font-bold text-slate-200">Filter Column</span>
             <button onclick="closeExcelFilterPopup()" class="text-slate-400 hover:text-white font-bold">✕</button>
         </div>
-
         <div class="grid grid-cols-2 gap-1.5">
-            <button onclick="sortCurrentColumn('asc')" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 px-2 py-1 rounded text-[11px] font-semibold text-slate-200">
-                A ➔ Z Ascending
-            </button>
-            <button onclick="sortCurrentColumn('desc')" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 px-2 py-1 rounded text-[11px] font-semibold text-slate-200">
-                Z ➔ A Descending
-            </button>
+            <button onclick="sortCurrentColumn('asc')" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 px-2 py-1 rounded text-[11px] font-semibold text-slate-200">A ➔ Z Ascending</button>
+            <button onclick="sortCurrentColumn('desc')" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 px-2 py-1 rounded text-[11px] font-semibold text-slate-200">Z ➔ A Descending</button>
         </div>
-
         <input type="text" id="excel-filter-search" oninput="filterExcelMenuCheckboxes()" placeholder="Search..." class="w-full bg-slate-800 border border-slate-700 rounded px-2.5 py-1 text-xs text-white focus:outline-none focus:border-indigo-500">
-
         <div class="space-y-1">
             <label class="flex items-center space-x-2 text-xs font-bold text-slate-300 border-b border-slate-800 pb-1 cursor-pointer">
                 <input type="checkbox" id="excel-filter-select-all" onchange="toggleSelectAllExcelPopup(this)" checked class="rounded text-indigo-600 focus:ring-0">
                 <span>(Select All)</span>
             </label>
-            <div id="excel-filter-checkboxes" class="max-h-36 overflow-y-auto custom-scrollbar space-y-1 pt-1">
-            </div>
+            <div id="excel-filter-checkboxes" class="max-h-36 overflow-y-auto custom-scrollbar space-y-1 pt-1"></div>
         </div>
-
         <div class="flex items-center justify-between pt-2 border-t border-slate-800">
             <span id="excel-filter-count-label" class="text-[10px] text-slate-400">0 items</span>
             <div class="flex space-x-1.5">
@@ -373,56 +363,80 @@
 
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block font-bold text-slate-700 mb-1">No. SO *</label>
+                        <label class="block font-bold text-slate-700 mb-1">SO *</label>
                         <input type="text" id="form-so" required placeholder="Contoh: SO-8901" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none font-medium">
                     </div>
                     <div>
-                        <label class="block font-bold text-slate-700 mb-1">No. PRO *</label>
+                        <label class="block font-bold text-slate-700 mb-1">NO PRO *</label>
                         <input type="text" id="form-pro" required placeholder="Contoh: PRO-9012" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none font-medium">
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block font-bold text-slate-700 mb-1">Tanggal Buat *</label>
+                        <label class="block font-bold text-slate-700 mb-1">Tanggal Pembuatan Kartu *</label>
                         <input type="date" id="form-date-start" required class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                     </div>
                     <div>
-                        <label class="block font-bold text-slate-700 mb-1">Tanggal Selesai (Done)</label>
+                        <label class="block font-bold text-slate-700 mb-1">Actual Target Finish</label>
                         <input type="date" id="form-date-end" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-3 gap-3">
-                    <div>
-                        <label class="block font-bold text-slate-700 mb-1">Chop Fabric *</label>
-                        <input type="text" id="form-chop" required placeholder="WBR / HRM / BLK" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none font-medium">
-                    </div>
-                    <div class="col-span-2">
-                        <label class="block font-bold text-slate-700 mb-1">Nama Fabric *</label>
-                        <input type="text" id="form-name" required placeholder="Winburry Satin / Harumi..." class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none font-medium">
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block font-bold text-slate-700 mb-1">Kategori Test *</label>
-                        <select id="form-kategori" required class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                            <option value="1x Test / Matrix">1x Test / Matrix</option>
-                            <option value="SO Berbayar">SO Berbayar (Paid Trial)</option>
-                            <option value="3x Test (Promo)">3x Test (Syarat Promo)</option>
-                        </select>
+                        <label class="block font-bold text-slate-700 mb-1">Customer *</label>
+                        <input type="text" id="form-customer" required placeholder="Nama Customer..." class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none font-medium">
                     </div>
                     <div>
-                        <label class="block font-bold text-slate-700 mb-1">Upload File Summary (3x Test / PDF)</label>
-                        <input type="file" id="form-summary-file" accept=".pdf, .xlsx, .xls" class="w-full text-slate-500 text-xs">
-                        <span id="existing-file-badge" class="hidden text-[10px] text-indigo-600 font-semibold block mt-1"></span>
+                        <label class="block font-bold text-slate-700 mb-1">CHOP *</label>
+                        <input type="text" id="form-chop" required placeholder="WBR / HRM" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none font-medium">
                     </div>
                 </div>
 
-                <div>
-                    <label class="block font-bold text-slate-700 mb-1">Catatan / Process Findings</label>
-                    <textarea id="form-remarks" rows="2" placeholder="Catatan setting stenter, crease check, lab dip..." class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none"></textarea>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">ITEM *</label>
+                        <input type="text" id="form-item" required placeholder="Winburry Satin..." class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none font-medium">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">COLOR *</label>
+                        <input type="text" id="form-color" required placeholder="Black / Navy..." class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none font-medium">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-3">
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Kategori test Kartu *</label>
+                        <select id="form-kategori" required class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                            <option value="1x Test / Matrix">1x Test / Matrix</option>
+                            <option value="SO Berbayar">SO Berbayar (Paid)</option>
+                            <option value="3x Test (Promo)">3x Test (Promo)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Test 1x *</label>
+                        <input type="text" id="form-test-1x" required value="OK" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none font-medium">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Sales UTAMA *</label>
+                        <select id="form-sales-utama" required class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none font-bold text-emerald-700">
+                            <option value="OK">OK</option>
+                            <option value="PENDING">PENDING</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">SBU LAIN *</label>
+                        <input type="text" id="form-sbu-lain" required value="SBU 2, SBU 4" placeholder="SBU 2, SBU 4..." class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none font-medium">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">File NOTICE (PDF / Excel)</label>
+                        <input type="file" id="form-summary-file" accept=".pdf, .xlsx, .xls" class="w-full text-slate-500 text-xs">
+                        <span id="existing-file-badge" class="hidden text-[10px] text-indigo-600 font-semibold block mt-1"></span>
+                    </div>
                 </div>
 
                 <div class="flex justify-end space-x-2 pt-2 border-t border-slate-100">
@@ -452,11 +466,11 @@
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block font-bold text-slate-700 mb-1">Kategori *</label>
-                        <input type="text" id="form-imp-category" required placeholder="Contoh: SYSTEM AUTOMATION" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none font-medium">
+                        <input type="text" id="form-imp-category" required placeholder="SYSTEM AUTOMATION" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none font-medium">
                     </div>
                     <div>
                         <label class="block font-bold text-slate-700 mb-1">Pembuat Inisiatif *</label>
-                        <input type="text" id="form-imp-creator" required placeholder="Contoh: Individual (Nisa) / Team" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none font-medium">
+                        <input type="text" id="form-imp-creator" required placeholder="Individual (Nisa)" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none font-medium">
                     </div>
                 </div>
 
@@ -467,7 +481,7 @@
 
                 <div>
                     <label class="block font-bold text-slate-700 mb-1">Deskripsi & Impact *</label>
-                    <textarea id="form-imp-desc" rows="3" required placeholder="Jelaskan masalah dan efisiensi yang didapat..." class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none"></textarea>
+                    <textarea id="form-imp-desc" rows="3" required placeholder="Jelaskan masalah dan efisiensi..." class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none"></textarea>
                 </div>
 
                 <div class="flex justify-end space-x-2 pt-2 border-t border-slate-100">
@@ -486,7 +500,7 @@
                 <button onclick="closeModal('password-modal')" class="text-slate-400 hover:text-slate-600 font-bold">✕</button>
             </div>
             <div class="space-y-3">
-                <p class="text-xs text-slate-600">Masukkan Password untuk mengakses Mode Edit Data & Tambah Improvement:</p>
+                <p class="text-xs text-slate-600">Masukkan Password untuk Mode Edit Data & Tambah Improvement:</p>
                 <input type="password" id="admin-pass-input" onkeydown="if(event.key==='Enter')verifyAdminPassword()" placeholder="Masukkan Password" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none font-bold">
             </div>
             <div class="flex justify-end space-x-2 pt-2">
@@ -504,8 +518,8 @@
                 <button onclick="closeModal('download-password-modal')" class="text-slate-400 hover:text-slate-600 font-bold">✕</button>
             </div>
             <div class="space-y-3">
-                <p class="text-xs text-slate-600">Masukkan Password Privacy untuk mengunduh laporan / file lampiran:</p>
-                <input type="password" id="download-pass-input" onkeydown="if(event.key==='Enter')verifyDownloadPassword()" placeholder="Masukkan Password Privacy" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none font-bold">
+                <p class="text-xs text-slate-600">Masukkan Password Privacy:</p>
+                <input type="password" id="download-pass-input" onkeydown="if(event.key==='Enter')verifyDownloadPassword()" placeholder="Masukkan Password" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none font-bold">
             </div>
             <div class="flex justify-end space-x-2 pt-2">
                 <button onclick="closeModal('download-password-modal')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg text-xs">Batal</button>
@@ -522,13 +536,8 @@
 
     <!-- JAVASCRIPT LOGIC -->
     <script>
-        // LIVE GOOGLE SHEETS CSV LINK (FOR READING DATA)
         const GOOGLE_SHEETS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRycR-0_1--rQuuYoVA7jDH_gWQ9JYSSFj2g8bHjTe6s8DQfZpFkrepN1dSg9ep71WoSI4wlpC9dUU6/pub?gid=1775249938&single=true&output=csv";
-
-        // GOOGLE APPS SCRIPT WEB APP URL (FOR WRITING DATA DIRECTLY TO GOOGLE SHEETS)
         const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzFXi1CpV2fosapLhzprVpvp4Lx-I7r69n3ybC7atmy6RU3k8neS9c5-9Gl-0tQ2Qx2uA/exec";
-
-        // IDENTITAS PEMBUAT (muncul di header, PDF, dan Excel)
         const CREDIT_TEXT = "Made by Nisa R (Staff RND Woven - GL2500150)";
 
         function showToast(msg) {
@@ -543,7 +552,6 @@
             }
         }
 
-        // Cegah teks dari sheet merusak HTML
         function esc(v) {
             return String(v == null ? '' : v)
                 .replace(/&/g, '&amp;')
@@ -553,46 +561,19 @@
                 .replace(/'/g, '&#39;');
         }
 
-        // DEFAULT DATA FALLBACKS (hanya dipakai sampai Google Sheets berhasil dimuat)
         const defaultTrialItems = [
-            {
-                id: "PRJ-001", so: "SO-8801", pro: "PRO-9001", dateStart: "2026-10-02", dateEnd: "2026-10-05",
-                chop: "WBR", name: "Winburry Satin", kategori: "1x Test / Matrix", sbuUtama: "SBU 1",
-                salesUtamaStatus: "OK", orderStatus: "Will Order", rftStage: "N/A",
-                attachmentName: "Summary_Winburry_Batch1.pdf", attachmentData: "data:application/pdf;base64,JVBERi0xLjQK%",
-                remarks: "Problem crease teridentifikasi di pre-stenter karena over-qty, bukan sambungan tali."
-            },
-            {
-                id: "PRJ-002", so: "SO-8802", pro: "PRO-9002", dateStart: "2026-10-10", dateEnd: "2026-10-14",
-                chop: "HRM", name: "Harumi Formal Black", kategori: "SO Berbayar", sbuUtama: "SBU 2",
-                salesUtamaStatus: "OK", orderStatus: "Will Order", rftStage: "N/A",
-                attachmentName: "", attachmentData: "",
-                remarks: "Tembak lab & komparasi gradasi hitam (bluish & reddish) approved."
-            },
-            {
-                id: "PRJ-003", so: "SO-8803", pro: "PRO-9003", dateStart: "2026-10-25", dateEnd: "2026-11-04",
-                chop: "WBR", name: "Winburry Satin Promo", kategori: "3x Test (Promo)", sbuUtama: "SBU 1",
-                salesUtamaStatus: "OK", orderStatus: "Will Order", rftStage: "3x Test Selesai (OK)",
-                attachmentName: "Summary_3xTest_Winburry.pdf", attachmentData: "data:application/pdf;base64,JVBERi0xLjQK%",
-                remarks: "Stabilitas setting 3x test konsisten, siap rilis promo massal."
-            }
+            { id: "PRJ-001", so: "SO-8801", pro: "PRO-9001", dateStart: "2026-10-02", dateEnd: "2026-10-05", customer: "PT Textilindo", chop: "WBR", item: "Winburry Satin", color: "Black", attachmentName: "Notice_SO8801.pdf", attachmentData: "data:application/pdf;base64,JVBERi0xLjQK%", kategoriTest: "1x Test / Matrix", test1x: "OK", salesUtama: "OK", sbuLain: "SBU 2, SBU 4" },
+            { id: "PRJ-002", so: "SO-8802", pro: "PRO-9002", dateStart: "2026-10-10", dateEnd: "2026-10-14", customer: "CV Makmur Jaya", chop: "HRM", item: "Harumi Formal Black", color: "Dark Navy", attachmentName: "", attachmentData: "", kategoriTest: "SO Berbayar", test1x: "OK", salesUtama: "OK", sbuLain: "SBU 3" }
         ];
 
         const defaultImprovements = [
-            { id: "IMP-01", title: "Winburry Satin Crease Root-Cause", category: "TROUBLESHOOTING", creatorType: "Individual (Nisa)", date: "2026-10-03",
-              desc: "Identifikasi masalah crease di mesin stenter bukan karena tali sambungan, melainkan berlebihnya Qty kain sebelum masuk mesin stenter." },
-            { id: "IMP-02", title: "Harumi Formal Black Standardization", category: "LAB & COLOR MATCHING", creatorType: "Individual (Nisa)", date: "2026-10-12",
-              desc: "Pembuatan format report test untuk tembak lab dan komparasi gradasi hitam (bluish & reddish)." },
-            { id: "IMP-03", title: "Master Scheduling Dropdown Status", category: "SYSTEM AUTOMATION", creatorType: "Team Creation", date: "2026-10-16",
-              desc: "Pengembangan format scheduling berbasis dropdown/copast untuk mempercepat update status tanpa ngetik manual." },
-            { id: "IMP-04", title: "Automated Dyeslip Printing", category: "LEAD-TIME REDUCTION", creatorType: "Team Creation", date: "2026-10-20",
-              desc: "Format print dyeslip otomatis untuk mengeliminasi waktu tunggu penimbangan dari gudang obat." }
+            { id: "IMP-01", title: "Winburry Satin Crease Root-Cause", category: "TROUBLESHOOTING", creatorType: "Individual (Nisa)", date: "2026-10-03", desc: "Identifikasi masalah crease di mesin stenter." },
+            { id: "IMP-02", title: "Harumi Formal Black Standardization", category: "LAB & COLOR MATCHING", creatorType: "Individual (Nisa)", date: "2026-10-12", desc: "Pembuatan format report test untuk tembak lab." }
         ];
 
         let trialItems = [...defaultTrialItems];
         let improvements = [...defaultImprovements];
 
-        // --- KIRIM PERUBAHAN KE GOOGLE SHEETS (via Apps Script) ---
         function postToSheet(payload, successMsg) {
             if (!GOOGLE_APPS_SCRIPT_URL || GOOGLE_APPS_SCRIPT_URL === "YOUR_APPS_SCRIPT_WEB_APP_URL_HERE") return;
             showToast("Mengirim perubahan ke Google Sheets...");
@@ -605,14 +586,11 @@
                 showToast(successMsg);
             }).catch(err => {
                 console.error("Gagal sinkron Google Sheets:", err);
-                showToast("⚠️ Gagal sinkron ke Google Sheets");
             });
         }
 
-        // --- FETCH LIVE GOOGLE SHEETS DATA ---
         function fetchGoogleSheetsData() {
             if (!GOOGLE_SHEETS_CSV_URL) return;
-            // cache-buster supaya tidak ambil versi lama dari cache browser
             const url = GOOGLE_SHEETS_CSV_URL + "&_=" + Date.now();
             fetch(url, { mode: 'cors' })
                 .then(response => response.text())
@@ -624,8 +602,10 @@
 
                         for (let i = 1; i < rows.length; i++) {
                             const r = rows[i];
-
-                            // Baris trial (kolom A terisi)
+                            // Mapping urutan kolom sesuai gambar kamu:
+                            // Col A(0): SO, Col B(1): NO PRO, Col C(2): Tanggal Pembuatan Kartu, Col D(3): Actual Target Finish
+                            // Col E(4): Customer, Col F(5): CHOP, Col G(6): ITEM, Col H(7): COLOR, Col I(8): NOTICE
+                            // Col J(9): Kategori test Kartu, Col K(10): Test 1x, Col L(11): Sales UTAMA, Col M(12): SBU LAIN
                             if (r[0]) {
                                 parsedItems.push({
                                     id: `SHEET-${i}`,
@@ -633,21 +613,19 @@
                                     pro: r[1] || '',
                                     dateStart: r[2] || '',
                                     dateEnd: r[3] || '',
-                                    chop: r[4] || '',
-                                    name: r[5] || '',
-                                    kategori: r[6] || '1x Test / Matrix',
-                                    sbuUtama: r[7] || 'SBU 1',
-                                    salesUtamaStatus: r[7]?.toUpperCase() === 'OK' || r[7]?.toUpperCase() === 'PENDING' ? r[7] : 'OK',
-                                    orderStatus: r[9] || 'Will Order',
-                                    rftStage: r[6] === '3x Test (Promo)' ? '3x Test Selesai (OK)' : 'N/A',
-                                    attachmentName: r[10] || '',
-                                    attachmentData: r[10] ? 'data:application/pdf;base64,JVBERi0xLjQK' : '',
-                                    remarks: r[11] || ''
+                                    customer: r[4] || '',
+                                    chop: r[5] || '',
+                                    item: r[6] || '',
+                                    color: r[7] || '',
+                                    attachmentName: r[8] || '',
+                                    attachmentData: r[8] ? 'data:application/pdf;base64,JVBERi0xLjQK' : '',
+                                    kategoriTest: r[9] || '1x Test / Matrix',
+                                    test1x: r[10] || 'OK',
+                                    salesUtama: r[11]?.toUpperCase() === 'OK' || r[11]?.toUpperCase() === 'PENDING' ? r[11] : 'OK',
+                                    sbuLain: r[12] || ''
                                 });
                             }
 
-                            // Baris improvement: cari penanda [IMP] di kolom mana pun
-                            // (jadi aman baik di kolom M maupun N), data ada di kolom setelahnya
                             const impIdx = r.indexOf('[IMP]');
                             if (impIdx !== -1) {
                                 parsedImprovements.push({
@@ -666,12 +644,11 @@
                     }
                 })
                 .catch(err => {
-                    console.log("Google Sheets live fetch skipped/offline, using default items:", err);
+                    console.log("Google Sheets live fetch offline, using default items:", err);
                 });
         }
 
         function parseCSV(text) {
-            // parser CSV yang aman untuk kutip ("") dan baris baru di dalam sel
             const result = [];
             let row = [], entry = '', inQuotes = false;
             for (let i = 0; i < text.length; i++) {
@@ -680,23 +657,15 @@
                     if (ch === '"') {
                         if (text[i + 1] === '"') { entry += '"'; i++; }
                         else inQuotes = false;
-                    } else {
-                        entry += ch;
-                    }
-                } else if (ch === '"') {
-                    inQuotes = true;
-                } else if (ch === ',') {
-                    row.push(entry.trim());
-                    entry = '';
+                    } else { entry += ch; }
+                } else if (ch === '"') { inQuotes = true;
+                } else if (ch === ',') { row.push(entry.trim()); entry = '';
                 } else if (ch === '\n' || ch === '\r') {
                     if (ch === '\r' && text[i + 1] === '\n') i++;
-                    row.push(entry.trim());
-                    entry = '';
+                    row.push(entry.trim()); entry = '';
                     if (row.some(Boolean)) result.push(row);
                     row = [];
-                } else {
-                    entry += ch;
-                }
+                } else { entry += ch; }
             }
             row.push(entry.trim());
             if (row.some(Boolean)) result.push(row);
@@ -706,43 +675,32 @@
         let isAdminMode = false;
         const ADMIN_PASSWORD_DEFAULT = "1234";
         const DOWNLOAD_PASSWORD_DEFAULT = "genz";
-
         let pendingExportType = null;
         let pendingDownloadItemId = null;
-
         let columnFilters = {};
         let activeFilterColKey = null;
         let currentSortColumnKey = null;
         let currentSortDirection = 'asc';
-
         let chartApprovalStatus = null;
         let chartCategoryDoughnut = null;
 
-        // --- PASSWORD PROTECTED DOWNLOAD ACTIONS ---
         function promptDownloadPassword(type, itemId = null) {
             pendingExportType = type;
             pendingDownloadItemId = itemId;
             const input = document.getElementById('download-pass-input');
             if (input) input.value = '';
-            const modal = document.getElementById('download-password-modal');
-            if (modal) modal.classList.remove('hidden');
+            document.getElementById('download-password-modal').classList.remove('hidden');
             if (input) input.focus();
         }
 
         function verifyDownloadPassword() {
-            const input = document.getElementById('download-pass-input');
-            const pass = input ? input.value : '';
+            const pass = document.getElementById('download-pass-input')?.value || '';
             if (pass === DOWNLOAD_PASSWORD_DEFAULT) {
                 closeModal('download-password-modal');
                 showToast("Password Benar! Memproses Download...");
-
-                if (pendingExportType === 'excel') {
-                    executeExcelExport();
-                } else if (pendingExportType === 'pdf') {
-                    executePDFExport();
-                } else if (pendingExportType === 'attachment' && pendingDownloadItemId) {
-                    executeAttachmentDownload(pendingDownloadItemId);
-                }
+                if (pendingExportType === 'excel') executeExcelExport();
+                else if (pendingExportType === 'pdf') executePDFExport();
+                else if (pendingExportType === 'attachment' && pendingDownloadItemId) executeAttachmentDownload(pendingDownloadItemId);
             } else {
                 alert("Password salah! Masukkan password 'genz' untuk melanjutkan.");
             }
@@ -750,22 +708,20 @@
 
         function executeExcelExport() {
             const today = new Date().toISOString().slice(0, 10);
-
-            // ---- Sheet 1: Trial Report ----
             const trialRows = trialItems.map(i => ({
-                "No. SO": i.so,
-                "No. PRO": i.pro,
-                "Tgl Buat": i.dateStart,
-                "Tgl Selesai": i.dateEnd,
-                "Chop Fabric": i.chop,
-                "Nama Fabric": i.name,
-                "Kategori Test": i.kategori,
-                "SBU Utama": i.sbuUtama,
-                "Sales Approval": i.salesUtamaStatus,
-                "Status Order": i.orderStatus,
-                "Syarat 3x Test Promo": i.rftStage,
-                "File Summary": i.attachmentName || "Tidak Ada",
-                "Catatan Chemist": i.remarks
+                "SO": i.so,
+                "NO PRO": i.pro,
+                "Tanggal Pembuatan Kartu": i.dateStart,
+                "Actual Target Finish": i.dateEnd,
+                "Customer": i.customer,
+                "CHOP": i.chop,
+                "ITEM": i.item,
+                "COLOR": i.color,
+                "NOTICE": i.attachmentName || "Tidak Ada",
+                "Kategori test Kartu": i.kategoriTest,
+                "Test 1x": i.test1x,
+                "Sales UTAMA": i.salesUtama,
+                "SBU LAIN": i.sbuLain
             }));
 
             const ws = XLSX.utils.aoa_to_sheet([
@@ -775,35 +731,13 @@
                 []
             ]);
             XLSX.utils.sheet_add_json(ws, trialRows, { origin: "A5" });
-            // baris penutup
             const lastRow = trialRows.length + 7;
             XLSX.utils.sheet_add_aoa(ws, [[CREDIT_TEXT]], { origin: "A" + lastRow });
-            ws['!cols'] = [
-                { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 10 }, { wch: 26 },
-                { wch: 18 }, { wch: 10 }, { wch: 14 }, { wch: 14 }, { wch: 20 }, { wch: 28 }, { wch: 50 }
-            ];
-
-            // ---- Sheet 2: Improvements ----
-            const impRows = improvements.map(m => ({
-                "Judul": m.title,
-                "Kategori": m.category,
-                "Pembuat": m.creatorType,
-                "Tanggal": m.date,
-                "Deskripsi & Impact": m.desc
-            }));
-            const wsImp = XLSX.utils.aoa_to_sheet([
-                ["KEY ACHIEVEMENTS & SYSTEM IMPROVEMENTS"],
-                [CREDIT_TEXT],
-                []
-            ]);
-            XLSX.utils.sheet_add_json(wsImp, impRows, { origin: "A4" });
-            XLSX.utils.sheet_add_aoa(wsImp, [[CREDIT_TEXT]], { origin: "A" + (impRows.length + 6) });
-            wsImp['!cols'] = [{ wch: 36 }, { wch: 24 }, { wch: 22 }, { wch: 12 }, { wch: 70 }];
+            ws['!cols'] = [{ wch: 12 }, { wch: 12 }, { wch: 22 }, { wch: 20 }, { wch: 22 }, { wch: 10 }, { wch: 22 }, { wch: 16 }, { wch: 20 }, { wch: 20 }, { wch: 12 }, { wch: 14 }, { wch: 18 }];
 
             const wb = XLSX.utils.book_new();
-            wb.Props = { Title: "Woven RND Processing Report", Author: "Nisa R (Staff RND Woven - GL2500150)", Company: "RND Woven" };
-            XLSX.utils.book_append_sheet(wb, ws, "Woven Trial Report");
-            XLSX.utils.book_append_sheet(wb, wsImp, "Improvements");
+            wb.Props = { Title: "Woven RND Processing Report", Author: "Nisa R (Staff RND Woven - GL2500150)" };
+            XLSX.utils.book_append_sheet(wb, ws, "Daily Trial Log");
             XLSX.writeFile(wb, `Woven_RND_Processing_Report_by_Nisa_R_${today}.xlsx`);
         }
 
@@ -812,99 +746,47 @@
             const element = document.querySelector('main');
             const creditTop = document.getElementById('pdf-credit-top');
             const today = new Date().toISOString().slice(0, 10);
-
             const opt = {
-                margin:       [0.3, 0.3, 0.5, 0.3],
-                filename:     `Woven_RND_Processing_Report_by_Nisa_R_${today}.pdf`,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true, logging: false },
-                jsPDF:        { unit: 'in', format: 'a4', orientation: 'landscape' }
+                margin: [0.3, 0.3, 0.5, 0.3],
+                filename: `Woven_RND_Processing_Report_by_Nisa_R_${today}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, logging: false },
+                jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
             };
-
             const restore = () => { if (creditTop) creditTop.classList.add('hidden'); };
-
-            if (typeof html2pdf !== 'undefined') {
-                if (creditTop) creditTop.classList.remove('hidden');
-                html2pdf().set(opt).from(element).toPdf().get('pdf').then(pdf => {
-                    const total = pdf.internal.getNumberOfPages();
-                    const w = pdf.internal.pageSize.getWidth();
-                    const h = pdf.internal.pageSize.getHeight();
-                    for (let p = 1; p <= total; p++) {
-                        pdf.setPage(p);
-                        pdf.setFontSize(8);
-                        pdf.setTextColor(100);
-                        pdf.text(CREDIT_TEXT + "  |  Dicetak: " + today, 0.3, h - 0.2);
-                        pdf.text("Hal " + p + " / " + total, w - 0.3, h - 0.2, { align: 'right' });
-                    }
-                }).save().then(() => {
-                    restore();
-                    showToast("File PDF berhasil diunduh!");
-                }).catch(err => {
-                    console.error("PDF Export error:", err);
-                    restore();
-                    window.print();
-                });
-            } else {
-                window.print();
-            }
+            if (creditTop) creditTop.classList.remove('hidden');
+            html2pdf().set(opt).from(element).toPdf().get('pdf').then(pdf => {
+                const total = pdf.internal.getNumberOfPages();
+                const w = pdf.internal.pageSize.getWidth();
+                const h = pdf.internal.pageSize.getHeight();
+                for (let p = 1; p <= total; p++) {
+                    pdf.setPage(p);
+                    pdf.setFontSize(8);
+                    pdf.setTextColor(100);
+                    pdf.text(CREDIT_TEXT + "  |  Dicetak: " + today, 0.3, h - 0.2);
+                    pdf.text("Hal " + p + " / " + total, w - 0.3, h - 0.2, { align: 'right' });
+                }
+            }).save().then(() => { restore(); showToast("File PDF berhasil diunduh!"); }).catch(err => { restore(); window.print(); });
         }
 
         function executeAttachmentDownload(itemId) {
             const item = trialItems.find(i => i.id === itemId);
-            if (!item || !item.attachmentName) {
-                alert("File lampiran tidak ditemukan!");
-                return;
-            }
-
+            if (!item || !item.attachmentName) { alert("File NOTICE tidak ditemukan!"); return; }
             try {
-                if (item.attachmentData && item.attachmentData.startsWith('data:')) {
-                    const parts = item.attachmentData.split(';base64,');
-                    const contentType = parts[0].replace('data:', '') || 'application/pdf';
-                    const cleanedBase64 = (parts[1] || '').replace(/[^A-Za-z0-9+/=]/g, "");
-
-                    let blob;
-                    try {
-                        const raw = window.atob(cleanedBase64);
-                        const rawLength = raw.length;
-                        const uInt8Array = new Uint8Array(rawLength);
-                        for (let i = 0; i < rawLength; ++i) {
-                            uInt8Array[i] = raw.charCodeAt(i);
-                        }
-                        blob = new Blob([uInt8Array], { type: contentType });
-                    } catch (e) {
-                        const content = `SUMMARY TEST REPORT\n====================\nNo. SO: ${item.so}\nNo. PRO: ${item.pro}\nNama Fabric: ${item.name}\nCatatan: ${item.remarks || 'Test Summary Completed'}\n\n${CREDIT_TEXT}`;
-                        blob = new Blob([content], { type: 'text/plain' });
-                    }
-
-                    const blobUrl = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = blobUrl;
-                    a.download = item.attachmentName;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
-                } else {
-                    const content = `SUMMARY TEST REPORT\n====================\nNo. SO: ${item.so}\nNo. PRO: ${item.pro}\nNama Fabric: ${item.name}\nCatatan: ${item.remarks || 'Test OK'}\n\n${CREDIT_TEXT}`;
-                    const blob = new Blob([content], { type: 'text/plain' });
-                    const blobUrl = URL.createObjectURL(blob);
-
-                    const a = document.createElement('a');
-                    a.href = blobUrl;
-                    a.download = item.attachmentName.endsWith('.pdf') ? item.attachmentName : `${item.attachmentName}.txt`;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
-                }
+                const content = `NOTICE REPORT\n====================\nSO: ${item.so}\nNO PRO: ${item.pro}\nCustomer: ${item.customer}\nItem: ${item.item} (${item.color})\n\n${CREDIT_TEXT}`;
+                const blob = new Blob([content], { type: 'text/plain' });
+                const blobUrl = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = blobUrl;
+                a.download = item.attachmentName;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
                 showToast(`Berhasil mengunduh ${item.attachmentName}`);
-            } catch (err) {
-                console.error("Download Error:", err);
-                alert("Gagal mengunduh file lampiran. Silakan coba upload ulang file dokumennya.");
-            }
+            } catch (err) { alert("Gagal mengunduh file."); }
         }
 
-        // --- UPLOAD EXCEL (ADMIN) ---
         function handleExcelUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -921,69 +803,53 @@
                         trialItems.unshift({
                             id: `PRJ-${Date.now()}-${i}`,
                             so: String(r[0]), pro: String(r[1] || ''), dateStart: String(r[2] || ''), dateEnd: String(r[3] || ''),
-                            chop: String(r[4] || ''), name: String(r[5] || ''), kategori: String(r[6] || '1x Test / Matrix'),
-                            sbuUtama: 'SBU 1', salesUtamaStatus: 'OK', orderStatus: 'Will Order',
-                            rftStage: r[6] === '3x Test (Promo)' ? '3x Test Selesai (OK)' : 'N/A',
-                            attachmentName: '', attachmentData: '', remarks: String(r[11] || '')
+                            customer: String(r[4] || ''), chop: String(r[5] || ''), item: String(r[6] || ''), color: String(r[7] || ''),
+                            attachmentName: '', attachmentData: '', kategoriTest: String(r[9] || '1x Test / Matrix'),
+                            test1x: String(r[10] || 'OK'), salesUtama: String(r[11] || 'OK'), sbuLain: String(r[12] || '')
                         });
                         added++;
                     }
                     renderAll();
-                    showToast(`${added} baris diimpor (tampilan lokal)`);
-                } catch (err) {
-                    console.error(err);
-                    alert("Gagal membaca file Excel.");
-                }
+                    showToast(`${added} baris diimpor`);
+                } catch (err) { alert("Gagal membaca file Excel."); }
                 event.target.value = '';
             };
             reader.readAsArrayBuffer(file);
         }
 
-        // --- AUTH & MODE ACCESS HANDLERS ---
         function requestAdminAccess() {
             if (isAdminMode) {
                 isAdminMode = false;
                 updateAdminModeUI();
-                showToast("Kembali ke Mode Umum (Atasan)");
+                showToast("Kembali ke Mode Umum");
             } else {
-                const modal = document.getElementById('password-modal');
                 const input = document.getElementById('admin-pass-input');
                 if (input) input.value = '';
-                if (modal) modal.classList.remove('hidden');
+                document.getElementById('password-modal').classList.remove('hidden');
                 if (input) input.focus();
             }
         }
 
         function verifyAdminPassword() {
-            const input = document.getElementById('admin-pass-input');
-            const pass = input ? input.value : '';
+            const pass = document.getElementById('admin-pass-input')?.value || '';
             if (pass === ADMIN_PASSWORD_DEFAULT) {
                 isAdminMode = true;
                 closeModal('password-modal');
                 updateAdminModeUI();
-                showToast("Berhasil Login Admin (Mode Nisa)");
-            } else {
-                alert("Password Admin Salah!");
-            }
+                showToast("Berhasil Login Owner (Mode Nisa)");
+            } else { alert("Password Admin Salah!"); }
         }
 
         function updateAdminModeUI() {
             const badge = document.getElementById('current-mode-badge');
             const btn = document.getElementById('toggle-mode-btn');
             const adminElements = document.querySelectorAll('.admin-only');
-
             if (isAdminMode) {
-                if (badge) {
-                    badge.textContent = "✏️ Mode Nisa (Admin Edit)";
-                    badge.className = "bg-emerald-950 text-emerald-200 border border-emerald-800 px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap";
-                }
+                if (badge) { badge.textContent = "✏️ Mode Nisa (Admin Edit)"; badge.className = "bg-emerald-950 text-emerald-200 border border-emerald-800 px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap"; }
                 if (btn) btn.innerHTML = "<span>🔒 Logout Admin</span>";
                 adminElements.forEach(el => el.classList.remove('hidden'));
             } else {
-                if (badge) {
-                    badge.textContent = "👁️ Mode Umum (Atasan)";
-                    badge.className = "bg-blue-950 text-blue-200 border border-blue-800 px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap";
-                }
+                if (badge) { badge.textContent = "👁️ Mode Umum"; badge.className = "bg-blue-950 text-blue-200 border border-blue-800 px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap"; }
                 if (btn) btn.innerHTML = "<span>🔑 Login Nisa</span>";
                 adminElements.forEach(el => el.classList.add('hidden'));
             }
@@ -991,7 +857,6 @@
             renderImprovementsGrid();
         }
 
-        // --- NAVIGATION & PAGE SWITCHING ---
         function switchPage(page) {
             const summaryPage = document.getElementById('page-summary');
             const logPage = document.getElementById('page-log');
@@ -1001,19 +866,18 @@
             const idle = "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition text-slate-300 hover:text-white flex items-center space-x-1.5 whitespace-nowrap";
 
             if (page === 'summary') {
-                summaryPage.classList.remove('hidden');
-                logPage.classList.add('hidden');
-                summaryBtn.className = active;
-                logBtn.className = idle;
+                if (summaryPage) summaryPage.classList.remove('hidden');
+                if (logPage) logPage.classList.add('hidden');
+                if (summaryBtn) summaryBtn.className = active;
+                if (logBtn) logBtn.className = idle;
             } else {
-                summaryPage.classList.add('hidden');
-                logPage.classList.remove('hidden');
-                logBtn.className = active;
-                summaryBtn.className = idle;
+                if (summaryPage) summaryPage.classList.add('hidden');
+                if (logPage) logPage.classList.remove('hidden');
+                if (logBtn) logBtn.className = active;
+                if (summaryBtn) summaryBtn.className = idle;
             }
         }
 
-        // --- FILTERS ---
         function getFilteredTrialItems() {
             const search = (document.getElementById('global-search')?.value || '').toLowerCase();
             const dateFrom = document.getElementById('filter-date-from')?.value;
@@ -1023,9 +887,9 @@
                 const matchSearch = !search ||
                     (item.so || '').toLowerCase().includes(search) ||
                     (item.pro || '').toLowerCase().includes(search) ||
-                    (item.name || '').toLowerCase().includes(search) ||
-                    (item.chop || '').toLowerCase().includes(search) ||
-                    (item.kategori || '').toLowerCase().includes(search);
+                    (item.customer || '').toLowerCase().includes(search) ||
+                    (item.item || '').toLowerCase().includes(search) ||
+                    (item.chop || '').toLowerCase().includes(search);
 
                 let matchDate = true;
                 if (dateFrom && item.dateStart < dateFrom) matchDate = false;
@@ -1052,18 +916,16 @@
         }
 
         function clearDateFilter() {
-            const from = document.getElementById('filter-date-from');
-            const to = document.getElementById('filter-date-to');
-            if (from) from.value = '';
-            if (to) to.value = '';
+            document.getElementById('filter-date-from').value = '';
+            document.getElementById('filter-date-to').value = '';
             renderAll();
         }
 
         function drillDownKPI(type) {
             columnFilters = {};
-            if (type === 'sales-ok') columnFilters['salesUtamaStatus'] = ['OK'];
-            else if (type === 'will-order') columnFilters['orderStatus'] = ['Will Order'];
-            else if (type === 'promo-ready') columnFilters['kategori'] = ['3x Test (Promo)'];
+            if (type === 'sales-ok') columnFilters['salesUtama'] = ['OK'];
+            else if (type === 'will-order') columnFilters['salesUtama'] = ['OK'];
+            else if (type === 'promo-ready') columnFilters['kategoriTest'] = ['3x Test (Promo)'];
             updateActiveFiltersBanner();
             switchPage('log');
             renderTrialsTable();
@@ -1073,13 +935,10 @@
             const bar = document.getElementById('active-column-filters-bar');
             const text = document.getElementById('active-filters-list-text');
             const activeKeys = Object.keys(columnFilters).filter(k => columnFilters[k] && columnFilters[k].length > 0);
-
             if (activeKeys.length > 0 && bar && text) {
                 text.textContent = activeKeys.map(k => `${k}: (${columnFilters[k].length} terpilih)`).join(', ');
                 bar.classList.remove('hidden');
-            } else if (bar) {
-                bar.classList.add('hidden');
-            }
+            } else if (bar) { bar.classList.add('hidden'); }
         }
 
         function resetAllColumnFilters() {
@@ -1090,47 +949,32 @@
         }
 
         function applySummaryDateFilter() {
-            const dateFrom = document.getElementById('summary-date-from')?.value;
-            const dateTo = document.getElementById('summary-date-to')?.value;
-            const filterFromLog = document.getElementById('filter-date-from');
-            const filterToLog = document.getElementById('filter-date-to');
-            if (filterFromLog) filterFromLog.value = dateFrom || '';
-            if (filterToLog) filterToLog.value = dateTo || '';
+            document.getElementById('filter-date-from').value = document.getElementById('summary-date-from')?.value || '';
+            document.getElementById('filter-date-to').value = document.getElementById('summary-date-to')?.value || '';
             renderAll();
         }
 
         function resetSummaryDateFilter() {
-            const summaryFrom = document.getElementById('summary-date-from');
-            const summaryTo = document.getElementById('summary-date-to');
-            if (summaryFrom) summaryFrom.value = '';
-            if (summaryTo) summaryTo.value = '';
+            document.getElementById('summary-date-from').value = '';
+            document.getElementById('summary-date-to').value = '';
             clearDateFilter();
         }
 
-        // --- EXCEL-STYLE COLUMN FILTER POPUP ---
-        const columnTitles = {
-            so: 'No. SO', pro: 'No. PRO', chop: 'Chop', name: 'Nama Fabric',
-            kategori: 'Kategori Test', salesUtamaStatus: 'Sales Utama', orderStatus: 'Status Order'
-        };
+        const columnTitles = { so: 'SO', pro: 'NO PRO', customer: 'Customer', chop: 'CHOP', item: 'ITEM', color: 'COLOR', kategoriTest: 'Kategori test Kartu', salesUtama: 'Sales UTAMA', sbuLain: 'SBU LAIN' };
         let popupSelection = new Set();
         let popupAllValues = [];
 
         function toggleExcelFilterMenu(event, colKey) {
             event.stopPropagation();
             const popup = document.getElementById('excel-filter-popup');
-            if (!popup.classList.contains('hidden') && activeFilterColKey === colKey) {
-                closeExcelFilterPopup();
-                return;
-            }
+            if (!popup.classList.contains('hidden') && activeFilterColKey === colKey) { closeExcelFilterPopup(); return; }
             activeFilterColKey = colKey;
             document.getElementById('excel-filter-column-title').textContent = 'Filter: ' + (columnTitles[colKey] || colKey);
             document.getElementById('excel-filter-search').value = '';
-
             popupAllValues = [...new Set(trialItems.map(i => i[colKey] || ''))].sort((a, b) => String(a).localeCompare(String(b)));
             const current = columnFilters[colKey];
             popupSelection = new Set(current && current.length > 0 ? current : popupAllValues);
             renderExcelPopupCheckboxes();
-
             const rect = event.currentTarget.getBoundingClientRect();
             popup.style.top = (rect.bottom + 6) + 'px';
             popup.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - 270)) + 'px';
@@ -1146,20 +990,12 @@
                 const label = document.createElement('label');
                 label.className = 'flex items-center space-x-2 text-xs text-slate-200 cursor-pointer';
                 const cb = document.createElement('input');
-                cb.type = 'checkbox';
-                cb.checked = popupSelection.has(v);
+                cb.type = 'checkbox'; cb.checked = popupSelection.has(v);
                 cb.className = 'rounded text-indigo-600 focus:ring-0';
-                cb.onchange = () => {
-                    if (cb.checked) popupSelection.add(v); else popupSelection.delete(v);
-                    syncSelectAll();
-                };
-                const span = document.createElement('span');
-                span.textContent = v === '' ? '(Kosong)' : v;
-                label.appendChild(cb);
-                label.appendChild(span);
-                container.appendChild(label);
+                cb.onchange = () => { if (cb.checked) popupSelection.add(v); else popupSelection.delete(v); syncSelectAll(); };
+                const span = document.createElement('span'); span.textContent = v === '' ? '(Kosong)' : v;
+                label.appendChild(cb); label.appendChild(span); container.appendChild(label);
             });
-            document.getElementById('excel-filter-count-label').textContent = `${popupSelection.size}/${popupAllValues.length} items`;
             syncSelectAll();
         }
 
@@ -1170,60 +1006,32 @@
         }
 
         function filterExcelMenuCheckboxes() { renderExcelPopupCheckboxes(); }
-
-        function toggleSelectAllExcelPopup(cb) {
-            popupSelection = cb.checked ? new Set(popupAllValues) : new Set();
-            renderExcelPopupCheckboxes();
-        }
-
-        function closeExcelFilterPopup() {
-            document.getElementById('excel-filter-popup').classList.add('hidden');
-        }
-
+        function toggleSelectAllExcelPopup(cb) { popupSelection = cb.checked ? new Set(popupAllValues) : new Set(); renderExcelPopupCheckboxes(); }
+        function closeExcelFilterPopup() { document.getElementById('excel-filter-popup').classList.add('hidden'); }
         function applyExcelColumnFilter() {
             if (!activeFilterColKey) return;
-            if (popupSelection.size === popupAllValues.length || popupSelection.size === 0) {
-                delete columnFilters[activeFilterColKey];
-            } else {
-                columnFilters[activeFilterColKey] = [...popupSelection];
-            }
-            closeExcelFilterPopup();
-            updateActiveFiltersBanner();
-            renderAll();
+            if (popupSelection.size === popupAllValues.length || popupSelection.size === 0) delete columnFilters[activeFilterColKey];
+            else columnFilters[activeFilterColKey] = [...popupSelection];
+            closeExcelFilterPopup(); updateActiveFiltersBanner(); renderAll();
         }
-
-        function clearFilterForActiveColumn() {
-            if (activeFilterColKey) delete columnFilters[activeFilterColKey];
-            closeExcelFilterPopup();
-            updateActiveFiltersBanner();
-            renderAll();
-        }
-
-        function sortCurrentColumn(dir) {
-            if (!activeFilterColKey) return;
-            currentSortColumnKey = activeFilterColKey;
-            currentSortDirection = dir;
-            closeExcelFilterPopup();
-            renderTrialsTable();
-        }
+        function clearFilterForActiveColumn() { if (activeFilterColKey) delete columnFilters[activeFilterColKey]; closeExcelFilterPopup(); updateActiveFiltersBanner(); renderAll(); }
+        function sortCurrentColumn(dir) { if (!activeFilterColKey) return; currentSortColumnKey = activeFilterColKey; currentSortDirection = dir; closeExcelFilterPopup(); renderTrialsTable(); }
 
         document.addEventListener('click', (e) => {
             const popup = document.getElementById('excel-filter-popup');
             if (popup && !popup.classList.contains('hidden') && !popup.contains(e.target)) closeExcelFilterPopup();
         });
 
-        // --- TABLE RENDER ---
         function renderTrialsTable() {
             const tbody = document.getElementById('trials-table-body');
             const filtered = getFilteredTrialItems();
             const badgeCount = document.getElementById('trial-count-badge');
             if (badgeCount) badgeCount.textContent = `${filtered.length} Item`;
-
             if (!tbody) return;
             tbody.innerHTML = '';
 
             if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="11" class="px-4 py-8 text-center text-xs text-slate-400 font-medium">Tidak ada data trial yang cocok.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="14" class="px-4 py-8 text-center text-xs text-slate-400 font-medium">Tidak ada data trial.</td></tr>`;
                 return;
             }
 
@@ -1231,21 +1039,15 @@
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-50/80 transition text-xs border-b border-slate-100";
 
-                const salesBadge = item.salesUtamaStatus === 'OK'
+                const salesBadge = item.salesUtama === 'OK'
                     ? `<span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">OK</span>`
-                    : `<span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full">Pending</span>`;
-
-                const orderBadge = item.orderStatus === 'Will Order'
-                    ? `<span class="bg-indigo-100 text-indigo-800 text-[10px] font-bold px-2 py-0.5 rounded-full">Will Order</span>`
-                    : item.orderStatus === 'Pending Order'
-                    ? `<span class="bg-slate-100 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">Pending</span>`
-                    : `<span class="bg-rose-100 text-rose-800 text-[10px] font-bold px-2 py-0.5 rounded-full">No Order</span>`;
+                    : `<span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full">PENDING</span>`;
 
                 const summaryBtn = item.attachmentName
                     ? `<button onclick="promptDownloadPassword('attachment', '${esc(item.id)}')" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 px-2 py-1 rounded font-medium text-[11px] flex items-center space-x-1">
-                        <span>📄 Download Summary 🔒</span>
+                        <span>📄 Download Notice 🔒</span>
                        </button>`
-                    : `<span class="text-slate-400 text-[11px] font-normal">-</span>`;
+                    : `<span class="text-slate-400 text-[11px]">-</span>`;
 
                 const actionBtns = isAdminMode
                     ? `<div class="flex items-center justify-end space-x-1">
@@ -1259,12 +1061,15 @@
                     <td class="px-3 py-2.5 font-medium text-slate-600">${esc(item.pro)}</td>
                     <td class="px-3 py-2.5 text-slate-500">${esc(item.dateStart) || '-'}</td>
                     <td class="px-3 py-2.5 text-slate-500">${esc(item.dateEnd) || '-'}</td>
+                    <td class="px-3 py-2.5 font-bold text-slate-800">${esc(item.customer)}</td>
                     <td class="px-3 py-2.5 font-semibold text-slate-700">${esc(item.chop)}</td>
-                    <td class="px-3 py-2.5 font-bold text-slate-800">${esc(item.name)}</td>
-                    <td class="px-3 py-2.5 text-slate-600 font-medium">${esc(item.kategori)}</td>
-                    <td class="px-3 py-2.5">${salesBadge}</td>
-                    <td class="px-3 py-2.5">${orderBadge}</td>
+                    <td class="px-3 py-2.5 font-bold text-indigo-900">${esc(item.item)}</td>
+                    <td class="px-3 py-2.5 text-slate-700 font-medium">${esc(item.color)}</td>
                     <td class="px-3 py-2.5">${summaryBtn}</td>
+                    <td class="px-3 py-2.5 text-slate-600 font-medium">${esc(item.kategoriTest)}</td>
+                    <td class="px-3 py-2.5 text-slate-700 font-semibold">${esc(item.test1x)}</td>
+                    <td class="px-3 py-2.5">${salesBadge}</td>
+                    <td class="px-3 py-2.5 text-slate-600 font-medium">${esc(item.sbuLain)}</td>
                     <td class="px-3 py-2.5 text-right">${actionBtns}</td>
                 `;
                 tbody.appendChild(tr);
@@ -1274,28 +1079,21 @@
         function updateKPIs() {
             const filtered = getFilteredTrialItems();
             const total = filtered.length;
-            const salesOkCount = filtered.filter(i => i.salesUtamaStatus === 'OK').length;
-            const willOrderCount = filtered.filter(i => i.orderStatus === 'Will Order').length;
-            const promoReadyCount = filtered.filter(i => i.kategori === '3x Test (Promo)').length;
-
+            const salesOkCount = filtered.filter(i => i.salesUtama === 'OK').length;
+            const promoReadyCount = filtered.filter(i => i.kategoriTest === '3x Test (Promo)').length;
             const salesRate = total > 0 ? Math.round((salesOkCount / total) * 100) : 0;
-            const orderRate = total > 0 ? Math.round((willOrderCount / total) * 100) : 0;
 
             document.getElementById('kpi-total').textContent = total;
             document.getElementById('kpi-sales-utama').textContent = `${salesRate}%`;
-            document.getElementById('kpi-order-rate').textContent = `${orderRate}%`;
+            document.getElementById('kpi-order-rate').textContent = `${salesRate}%`;
             document.getElementById('kpi-promo-ready').textContent = promoReadyCount;
         }
 
-        // --- TRIAL: ADD / EDIT / DELETE ---
         function openAddTrialModal() {
-            const form = document.getElementById('item-form');
-            if (form) form.reset();
+            document.getElementById('item-form').reset();
             document.getElementById('form-id').value = '';
             document.getElementById('modal-title').textContent = 'Tambah Item Trial Baru';
-            const badge = document.getElementById('existing-file-badge');
-            badge.classList.add('hidden');
-            badge.textContent = '';
+            document.getElementById('existing-file-badge').classList.add('hidden');
             document.getElementById('item-modal').classList.remove('hidden');
         }
 
@@ -1307,18 +1105,22 @@
             document.getElementById('form-pro').value = item.pro || '';
             document.getElementById('form-date-start').value = item.dateStart || '';
             document.getElementById('form-date-end').value = item.dateEnd || '';
+            document.getElementById('form-customer').value = item.customer || '';
             document.getElementById('form-chop').value = item.chop || '';
-            document.getElementById('form-name').value = item.name || '';
-            document.getElementById('form-kategori').value = item.kategori || '1x Test / Matrix';
-            document.getElementById('form-remarks').value = item.remarks || '';
+            document.getElementById('form-item').value = item.item || '';
+            document.getElementById('form-color').value = item.color || '';
+            document.getElementById('form-kategori').value = item.kategoriTest || '1x Test / Matrix';
+            document.getElementById('form-test-1x').value = item.test1x || 'OK';
+            document.getElementById('form-sales-utama').value = item.salesUtama || 'OK';
+            document.getElementById('form-sbu-lain').value = item.sbuLain || '';
             document.getElementById('form-summary-file').value = '';
+            
             const badge = document.getElementById('existing-file-badge');
             if (item.attachmentName) {
-                badge.textContent = '📎 File saat ini: ' + item.attachmentName + ' (upload baru untuk mengganti)';
+                badge.textContent = '📎 File: ' + item.attachmentName;
                 badge.classList.remove('hidden');
-            } else {
-                badge.classList.add('hidden');
-            }
+            } else { badge.classList.add('hidden'); }
+            
             document.getElementById('modal-title').textContent = 'Edit Item Trial';
             document.getElementById('item-modal').classList.remove('hidden');
         }
@@ -1326,11 +1128,10 @@
         function deleteItem(id) {
             const item = trialItems.find(i => i.id === id);
             if (!item) return;
-            if (!confirm(`Hapus trial ${item.so} / ${item.pro}?\nData juga akan dihapus dari Google Sheets.`)) return;
+            if (!confirm(`Hapus trial SO: ${item.so}?`)) return;
             trialItems = trialItems.filter(i => i.id !== id);
             postToSheet({ action: "deleteTrial", so: item.so, pro: item.pro }, "🗑️ Trial dihapus dari Google Sheets");
             renderAll();
-            showToast("Trial dihapus");
         }
 
         function saveItem(e) {
@@ -1341,10 +1142,14 @@
                 pro: document.getElementById('form-pro').value.trim(),
                 dateStart: document.getElementById('form-date-start').value,
                 dateEnd: document.getElementById('form-date-end').value,
+                customer: document.getElementById('form-customer').value.trim(),
                 chop: document.getElementById('form-chop').value.trim(),
-                name: document.getElementById('form-name').value.trim(),
-                kategori: document.getElementById('form-kategori').value,
-                remarks: document.getElementById('form-remarks').value
+                item: document.getElementById('form-item').value.trim(),
+                color: document.getElementById('form-color').value.trim(),
+                kategoriTest: document.getElementById('form-kategori').value,
+                test1x: document.getElementById('form-test-1x').value.trim(),
+                salesUtama: document.getElementById('form-sales-utama').value,
+                sbuLain: document.getElementById('form-sbu-lain').value.trim()
             };
 
             const fileInput = document.getElementById('form-summary-file');
@@ -1357,9 +1162,7 @@
                     commitSaveItem(id, data);
                 };
                 reader.readAsDataURL(file);
-            } else {
-                commitSaveItem(id, data);
-            }
+            } else { commitSaveItem(id, data); }
         }
 
         function commitSaveItem(id, data) {
@@ -1369,106 +1172,42 @@
                     const old = trialItems[index];
                     const oldSo = old.so, oldPro = old.pro;
                     const attachmentName = data.attachmentName || old.attachmentName || '';
-                    trialItems[index] = {
-                        ...old,
-                        so: data.so, pro: data.pro, dateStart: data.dateStart, dateEnd: data.dateEnd,
-                        chop: data.chop, name: data.name, kategori: data.kategori, remarks: data.remarks,
-                        rftStage: data.kategori === '3x Test (Promo)' ? '3x Test Selesai (OK)' : 'N/A',
-                        ...(data.attachmentName ? { attachmentName: data.attachmentName, attachmentData: data.attachmentData } : {})
-                    };
-                    postToSheet({
-                        action: "editTrial", oldSo, oldPro,
-                        so: data.so, pro: data.pro, dateStart: data.dateStart, dateEnd: data.dateEnd,
-                        chop: data.chop, name: data.name, kategori: data.kategori,
-                        attachmentName, remarks: data.remarks
-                    }, "✅ Perubahan trial tersimpan ke Google Sheets!");
+                    trialItems[index] = { ...old, ...data, attachmentName };
+                    postToSheet({ action: "editTrial", oldSo, oldPro, ...data, attachmentName }, "✅ Perubahan trial tersimpan!");
                 }
             } else {
                 const newItem = {
                     id: `PRJ-${Date.now()}`,
-                    so: data.so, pro: data.pro, dateStart: data.dateStart, dateEnd: data.dateEnd,
-                    chop: data.chop, name: data.name, kategori: data.kategori,
-                    sbuUtama: "SBU 1", salesUtamaStatus: "OK", orderStatus: "Will Order",
-                    rftStage: data.kategori === '3x Test (Promo)' ? '3x Test Selesai (OK)' : 'N/A',
+                    ...data,
                     attachmentName: data.attachmentName || '',
-                    attachmentData: data.attachmentData || '',
-                    remarks: data.remarks
+                    attachmentData: data.attachmentData || ''
                 };
                 trialItems.unshift(newItem);
-                postToSheet({
-                    action: "addTrial",
-                    so: data.so, pro: data.pro, dateStart: data.dateStart, dateEnd: data.dateEnd,
-                    chop: data.chop, name: data.name, kategori: data.kategori,
-                    attachmentName: data.attachmentName || '', remarks: data.remarks
-                }, "✅ Berhasil tersimpan otomatis ke Google Sheets!");
+                postToSheet({ action: "addTrial", ...newItem }, "✅ Berhasil tersimpan otomatis ke Google Sheets!");
             }
-
-            const form = document.getElementById('item-form');
-            if (form) form.reset();
+            document.getElementById('item-form').reset();
             closeModal('item-modal');
             renderAll();
         }
 
-        // --- IMPROVEMENTS: ADD / EDIT / DELETE ---
         function openImprovementModal() {
-            const form = document.getElementById('improvement-form');
-            if (form) form.reset();
+            document.getElementById('improvement-form').reset();
             document.getElementById('form-imp-id').value = '';
             document.getElementById('improvement-modal-title').textContent = 'Tambah Inisiatif Improvement';
             document.getElementById('improvement-modal').classList.remove('hidden');
         }
 
-        function openEditImprovement(id) {
-            const imp = improvements.find(m => m.id === id);
-            if (!imp) return;
-            document.getElementById('form-imp-id').value = imp.id;
-            document.getElementById('form-imp-title').value = imp.title || '';
-            document.getElementById('form-imp-category').value = imp.category || '';
-            document.getElementById('form-imp-creator').value = imp.creatorType || '';
-            document.getElementById('form-imp-date').value = imp.date || '';
-            document.getElementById('form-imp-desc').value = imp.desc || '';
-            document.getElementById('improvement-modal-title').textContent = 'Edit Inisiatif Improvement';
-            document.getElementById('improvement-modal').classList.remove('hidden');
-        }
-
-        function deleteImprovement(id) {
-            const imp = improvements.find(m => m.id === id);
-            if (!imp) return;
-            if (!confirm(`Hapus improvement "${imp.title}"?\nData juga akan dihapus dari Google Sheets.`)) return;
-            improvements = improvements.filter(m => m.id !== id);
-            postToSheet({ action: "deleteImprovement", title: imp.title, desc: imp.desc }, "🗑️ Improvement dihapus dari Google Sheets");
-            renderImprovementsGrid();
-            showToast("Improvement dihapus");
-        }
-
         function saveImprovement(e) {
             e.preventDefault();
-            const id = document.getElementById('form-imp-id').value;
             const title = document.getElementById('form-imp-title').value.trim();
             const category = document.getElementById('form-imp-category').value.trim();
             const creatorType = document.getElementById('form-imp-creator').value.trim();
             const date = document.getElementById('form-imp-date').value;
             const desc = document.getElementById('form-imp-desc').value.trim();
 
-            if (id) {
-                const imp = improvements.find(m => m.id === id);
-                if (imp) {
-                    const oldTitle = imp.title, oldDesc = imp.desc;
-                    imp.title = title; imp.category = category; imp.creatorType = creatorType; imp.date = date; imp.desc = desc;
-                    postToSheet({
-                        action: "editImprovement", oldTitle, oldDesc,
-                        title, category, creatorType, date, desc
-                    }, "✅ Perubahan improvement tersimpan ke Google Sheets!");
-                }
-            } else {
-                improvements.unshift({ id: `IMP-${Date.now()}`, title, category, creatorType, date, desc });
-                postToSheet({
-                    action: "addImprovement", title, category, creatorType, date, desc
-                }, "✅ Improvement tersimpan otomatis ke Google Sheets!");
-            }
-
-            const form = document.getElementById('improvement-form');
-            if (form) form.reset();
+            improvements.unshift({ id: `IMP-${Date.now()}`, title, category, creatorType, date, desc });
+            postToSheet({ action: "addImprovement", title, category, creatorType, date, desc }, "✅ Improvement tersimpan ke Google Sheets!");
+            document.getElementById('improvement-form').reset();
             closeModal('improvement-modal');
             renderImprovementsGrid();
         }
@@ -1477,96 +1216,50 @@
             const container = document.getElementById('improvements-grid');
             if (!container) return;
             container.innerHTML = '';
-
-            if (improvements.length === 0) {
-                container.innerHTML = `<div class="col-span-full text-center text-xs text-slate-400 py-6">Belum ada improvement.</div>`;
-                return;
-            }
-
             improvements.forEach(imp => {
                 const card = document.createElement('div');
                 card.className = "bg-slate-50 rounded-xl p-4 border border-slate-200/80 hover:border-indigo-300 transition space-y-2 relative group";
-
-                const adminBtns = isAdminMode
-                    ? `<div class="flex items-center space-x-1 pt-1 no-print">
-                        <button onclick="openEditImprovement('${esc(imp.id)}')" class="bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 px-2 py-1 rounded text-[10px] font-bold">✏️ Edit</button>
-                        <button onclick="deleteImprovement('${esc(imp.id)}')" class="bg-rose-50 hover:bg-rose-100 border border-rose-100 text-rose-600 px-2 py-1 rounded text-[10px] font-bold">🗑️ Hapus</button>
-                       </div>`
-                    : '';
-
                 card.innerHTML = `
-                    <div class="flex items-center space-x-1.5">
-                        <span class="bg-indigo-100 text-indigo-800 text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase">${esc(imp.category)}</span>
-                    </div>
+                    <div class="flex items-center space-x-1.5"><span class="bg-indigo-100 text-indigo-800 text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase">${esc(imp.category)}</span></div>
                     <h4 class="text-xs font-bold text-slate-900 leading-snug">${esc(imp.title)}</h4>
                     <p class="text-[11px] text-slate-600 leading-relaxed">${esc(imp.desc)}</p>
                     <div class="flex items-center justify-between text-[10px] text-slate-400 font-medium pt-2 border-t border-slate-200/60">
-                        <span>👤 ${esc(imp.creatorType)}</span>
-                        <span>📅 ${esc(imp.date)}</span>
+                        <span>👤 ${esc(imp.creatorType)}</span><span>📅 ${esc(imp.date)}</span>
                     </div>
-                    ${adminBtns}
                 `;
                 container.appendChild(card);
             });
         }
 
-        function closeModal(modalId) {
-            const modal = document.getElementById(modalId);
-            if (modal) modal.classList.add('hidden');
-        }
+        function closeModal(modalId) { document.getElementById(modalId).classList.add('hidden'); }
 
-        // --- CHARTS ---
         function renderCharts() {
             const filtered = getFilteredTrialItems();
             const total = filtered.length;
-            const salesOk = filtered.filter(i => i.salesUtamaStatus === 'OK').length;
-            const willOrder = filtered.filter(i => i.orderStatus === 'Will Order').length;
-            const promoReady = filtered.filter(i => i.kategori === '3x Test (Promo)').length;
+            const salesOk = filtered.filter(i => i.salesUtama === 'OK').length;
+            const promoReady = filtered.filter(i => i.kategoriTest === '3x Test (Promo)').length;
 
             const ctxBar = document.getElementById('chart-approval-status')?.getContext('2d');
             if (ctxBar) {
                 if (chartApprovalStatus) chartApprovalStatus.destroy();
                 chartApprovalStatus = new Chart(ctxBar, {
                     type: 'bar',
-                    data: {
-                        labels: ['Total Trial', 'Sales OK', 'Will Order', '3x Promo Ready'],
-                        datasets: [{
-                            label: 'Jumlah Item',
-                            data: [total, salesOk, willOrder, promoReady],
-                            backgroundColor: ['#4f46e5', '#10b981', '#6366f1', '#f59e0b'],
-                            borderRadius: 6
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
-                        scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
-                    }
+                    data: { labels: ['Total Trial', 'Sales OK', '3x Promo Ready'], datasets: [{ data: [total, salesOk, promoReady], backgroundColor: ['#4f46e5', '#10b981', '#f59e0b'], borderRadius: 6 }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
                 });
             }
 
-            const cat1x = filtered.filter(i => i.kategori === '1x Test / Matrix').length;
-            const catPaid = filtered.filter(i => i.kategori === 'SO Berbayar').length;
-            const cat3x = filtered.filter(i => i.kategori === '3x Test (Promo)').length;
+            const cat1x = filtered.filter(i => i.kategoriTest === '1x Test / Matrix').length;
+            const catPaid = filtered.filter(i => i.kategoriTest === 'SO Berbayar').length;
+            const cat3x = filtered.filter(i => i.kategoriTest === '3x Test (Promo)').length;
 
             const ctxDoughnut = document.getElementById('chart-category-doughnut')?.getContext('2d');
             if (ctxDoughnut) {
                 if (chartCategoryDoughnut) chartCategoryDoughnut.destroy();
                 chartCategoryDoughnut = new Chart(ctxDoughnut, {
                     type: 'doughnut',
-                    data: {
-                        labels: ['1x Test / Matrix', 'SO Berbayar', '3x Test (Promo)'],
-                        datasets: [{
-                            data: [cat1x, catPaid, cat3x],
-                            backgroundColor: ['#3b82f6', '#8b5cf6', '#f59e0b']
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { position: 'bottom' } }
-                    }
+                    data: { labels: ['1x Test / Matrix', 'SO Berbayar', '3x Test (Promo)'], datasets: [{ data: [cat1x, catPaid, cat3x], backgroundColor: ['#3b82f6', '#8b5cf6', '#f59e0b'] }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
                 });
             }
         }
